@@ -24,7 +24,8 @@ interface GongMoment {
 
 const soundOptions: SoundOption[] = [
   { value: 'silence', label: '🔇 Silence' },
-  { value: 'rain', label: '🌧️ Pluie', file: '/assets/ambient/rain.mp3' },
+  { value: 'rain', label: '🌧️ Pluie', file: '/assets/ambients/rain.mp3' },
+  { value: 'rain', label: '🌧️ Ocean', file: '/assets/ambients/ocean.mp3' },
 ];
 
 const gongOptions: GongOption[] = [
