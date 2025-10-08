@@ -1,0 +1,292 @@
+:root{
+  /* Couleurs principales */
+  --color-primary-1: #68E0DB; /* cyan pâle - début du dégradé */
+  --color-primary-2: #7BCFA0; /* vert douceur - fin du dégradé */
+  --color-accent:     #0B3B52; /* bleu foncé utilisé pour le logotype / CTAs */
+  --color-accent-2:   #074B61; /* bleu accent (hover/bordures) */
+  /* Neutres */
+  --color-bg:         #F6FCFD; /* fond général clair */
+  --color-surface:    #FFFFFF; /* surfaces (cards, modals) */
+  --color-muted:      #9FB6BE; /* textes secondaires, icônes discrètes */
+  --color-outline:    rgba(11,59,82,0.08);
+  /* Texte */
+  --text-default:     #07323F; /* couleur texte principale (contraste élevé) */
+  --text-on-primary:  #FFFFFF; /* texte sur éléments colorés */
+  /* Dégradé principal */
+  --grad-primary: linear-gradient(135deg,var(--color-primary-1),var(--color-primary-2));
+  /* Ombres / élévation */
+  --shadow-soft: 0 6px 18px rgba(11,59,82,0.08);
+  --shadow-hover: 0 10px 30px rgba(11,59,82,0.10);
+  /* Typographie */
+  --font-sans: "Inter", system-ui, -apple-system, "Helvetica Neue", Arial;
+  --font-heading-weight: 600;
+  --font-body-weight: 400;
+  /* Sizes / spacing */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-pill: 999px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 16px;
+  --spacing-4: 24px;
+  /* Icon / app tile */
+  --icon-size: 56px;
+  --app-icon-radius: 18px;
+  /* Accessibility */
+  --focus-ring: 3px solid rgba(11,59,82,0.18);
+}
+/* Dark theme variant */
+:root[data-theme="dark"]{
+  --color-bg:         #071821;
+  --color-surface:    #072830;
+  --color-muted:      #7DA6AD;
+  --text-default:     #E8F7F8;
+  --color-outline:    rgba(120,220,210,0.06);
+  /* Make gradients slightly richer on dark bg */
+  --color-primary-1: #4FD9D1;
+  --color-primary-2: #4AB285;
+  --grad-primary: linear-gradient(135deg,var(--color-primary-1),var(--color-primary-2));
+  --shadow-soft: none;
+}
+
+/* Reset & Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-weight: var(--font-body-weight);
+  color: var(--text-default);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+}
+
+/* Layout */
+.app {
+  min-height: 100vh;
+  padding: var(--spacing-4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-4);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Typography */
+.title-main {
+  font-size: 2rem;
+  font-weight: var(--font-heading-weight);
+  text-align: center;
+  margin-bottom: var(--spacing-4);
+  color: var(--color-accent);
+}
+
+.title-section {
+  font-size: 1.25rem;
+  font-weight: var(--font-heading-weight);
+  color: var(--color-accent);
+  margin-bottom: var(--spacing-3);
+}
+
+.text-muted {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  margin-top: var(--spacing-2);
+}
+
+/* Sections */
+.section {
+  margin-bottom: var(--spacing-4);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--color-outline);
+  color: var(--color-accent-2);
+}
+
+.section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  margin-right: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+
+.btn-primary {
+  background: var(--grad-primary);
+  color: var(--text-on-primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-primary:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-accent);
+  border: 2px solid var(--color-outline);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-accent-2);
+  background: var(--color-bg);
+}
+
+.btn:focus {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Form Elements */
+.select,
+.input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--color-outline);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--text-default);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  margin-bottom: var(--spacing-3);
+}
+
+.select:focus,
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent-2);
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--spacing-2);
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.range {
+  width: 100%;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-outline);
+  outline: none;
+  margin-bottom: var(--spacing-3);
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--grad-primary);
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+}
+
+.range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--grad-primary);
+  cursor: pointer;
+  border: none;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Checkbox */
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* Lists */
+.list {
+  list-style: none;
+  margin-top: var(--spacing-3);
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-3);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-2);
+}
+
+/* Time Display */
+.time-display {
+  font-size: 4rem;
+  font-weight: var(--font-heading-weight);
+  text-align: center;
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--spacing-2);
+}
+
+/* Emoji */
+.emoji {
+  font-size: 4rem;
+  text-align: center;
+  margin-bottom: var(--spacing-3);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .app {
+    padding: var(--spacing-2);
+  }
+
+  .container {
+    padding: var(--spacing-3);
+  }
+
+  .title-main {
+    font-size: 1.5rem;
+  }
+
+  .time-display {
+    font-size: 3rem;
+  }
+
+  .btn {
+    width: 100%;
+    margin-right: 0;
+  }
+}
