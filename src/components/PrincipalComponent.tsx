@@ -1,25 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 interface SoundOption {
   value: string;
   label: string;
   file?: string;
-}
-
-interface GongOption {
-  id: string;
-  name: string;
-  file: string;
-}
-
-interface IntervalOption {
-  value: number;
-  label: string;
-}
-
-interface GongMoment {
-  start: boolean;
-  end: boolean;
+  isCustom?: boolean;
 }
 
 const soundOptions: SoundOption[] = [
@@ -27,14 +14,14 @@ const soundOptions: SoundOption[] = [
   { value: 'rain', label: '🌧️ Pluie', file: '/assets/ambient/rain.mp3' },
 ];
 
-const gongOptions: GongOption[] = [
+const gongOptions = [
   { id: 'gong1', name: 'Gong Tibétain', file: '/assets/gongs/gong_hit.wav' },
   { id: 'gong2', name: 'Gong Chinois', file: '/assets/gongs/roger_gong.mp3' },
   { id: 'gong3', name: 'Gong Japonais', file: '/assets/gongs/studio_gong.wav' },
   { id: 'gong4', name: 'Gong Zen', file: '/assets/gongs/zen_gong.wav' },
 ];
 
-const intervalOptions: IntervalOption[] = [
+const intervalOptions = [
   { value: 0, label: 'Aucun' },
   { value: 5, label: 'Toutes les 5 min' },
   { value: 10, label: 'Toutes les 10 min' },
@@ -64,9 +51,10 @@ export default function MeditationTimer() {
   const [gongVolume, setGongVolume] = useState(0.7);
   const [selectedGong, setSelectedGong] = useState('gong1');
   const [gongInterval, setGongInterval] = useState(0);
-  const [gongMoments, setGongMoments] = useState<GongMoment>({ start: false, end: false });
+  const [gongMoments, setGongMoments] = useState({ start: false, end: false });
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [nextGongIn, setNextGongIn] = useState(0);
+  const [customSounds, setCustomSounds] = useState<SoundOption[]>([]);
 
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
   const gongAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -75,7 +63,79 @@ export default function MeditationTimer() {
   const remainingTimeRef = useRef<number>(0);
   const nextGongTimeRef = useRef<number>(0);
 
-  const selectedSoundOption = soundOptions.find((s) => s.value === selectedSound);
+  // Charger les sons personnalisés au démarrage
+  useEffect(() => {
+    const loadCustomSounds = async () => {
+      try {
+        const result = await Filesystem.readFile({
+          path: 'custom-sounds.json',
+          directory: Directory.Data,
+        });
+
+        if (result && typeof result.data === 'string') {
+          const savedSounds = JSON.parse(result.data);
+          setCustomSounds(savedSounds);
+        } else {
+          setCustomSounds([]); // Aucun son sauvegardé
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des sons personnalisés :', error);
+        setCustomSounds([]); // Aucun son sauvegardé
+      }
+    };
+    loadCustomSounds();
+  }, []);
+
+  // Sauvegarder les sons personnalisés
+  const saveCustomSounds = async (sounds: SoundOption[]) => {
+    await Filesystem.writeFile({
+      path: 'custom-sounds.json',
+      data: JSON.stringify(sounds),
+      directory: Directory.Data,
+    });
+  };
+
+  // Ajouter un son personnalisé
+  const addCustomSound = async () => {
+    try {
+      const result = await FilePicker.pickFiles({
+        types: ['audio/*'],
+        readData: true,
+      });
+
+      if (!result.files[0]) {
+        console.log('Aucun fichier sélectionné');
+        return;
+      }
+
+      const file = result.files[0];
+      const soundId = `custom_${Date.now()}`;
+      const fileName = `${soundId}.${file.name.split('.').pop()}`;
+
+      // Sauvegarder le fichier dans le système de fichiers
+      await Filesystem.writeFile({
+        path: `audio/${fileName}`,
+        data: file.data ?? '',
+        directory: Directory.Data,
+      });
+
+      const newSound: SoundOption = {
+        value: soundId,
+        label: `🎵 ${file.name.split('.')[0]}`,
+        file: `audio/${fileName}`,
+        isCustom: true,
+      };
+
+      const updatedSounds = [...customSounds, newSound];
+      setCustomSounds(updatedSounds);
+      saveCustomSounds(updatedSounds);
+    } catch (error) {
+      console.error('Erreur lors de la sélection ou de la sauvegarde du fichier :', error);
+    }
+  };
+
+  const allSounds = [...soundOptions, ...customSounds];
+  const selectedSoundOption = allSounds.find((s) => s.value === selectedSound);
   const selectedGongOption = gongOptions.find((g) => g.id === selectedGong);
 
   useEffect(() => {
@@ -110,7 +170,6 @@ export default function MeditationTimer() {
     setTimeRemaining(totalSeconds);
     setNextGongIn(gongInterval > 0 ? gongInterval * 60 : 0);
 
-    // Gong de début si activé
     if (gongMoments.start) {
       setTimeout(() => playGong(), 500);
     }
@@ -121,7 +180,6 @@ export default function MeditationTimer() {
       ambientAudioRef.current.play().catch((err) => console.error('Erreur audio:', err));
     }
 
-    // Timer principal
     let remaining = totalSeconds;
     timerRef.current = setInterval(() => {
       remaining--;
@@ -200,12 +258,47 @@ export default function MeditationTimer() {
     }
   };
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 py-8 px-4">
       <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
         <h1 className="text-4xl font-bold text-center text-indigo-900 mb-8">
           🧘 Méditation Timer
         </h1>
+
+        {/* Section pour les sons personnalisés */}
+        <div className="mb-6 p-6 bg-yellow-50 rounded-xl">
+          <h2 className="text-xl font-semibold text-yellow-900 mb-4">
+            Sons personnalisés
+          </h2>
+          <button
+            onClick={addCustomSound}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors mb-4"
+          >
+            ➕ Ajouter un son personnalisé
+          </button>
+
+          {customSounds.length > 0 ? (
+            <ul className="space-y-2">
+              {customSounds.map((sound) => (
+                <li
+                  key={sound.value}
+                  className="flex items-center justify-between p-3 bg-yellow-100 rounded-lg"
+                >
+                  <span>{sound.label}</span>
+                  <button
+                    onClick={() => setSelectedSound(sound.value)}
+                    className="text-yellow-800 hover:text-yellow-900 font-medium"
+                  >
+                    🎵 Sélectionner
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-yellow-800">Aucun son personnalisé ajouté.</p>
+          )}
+        </div>
 
         {selectedSound !== 'silence' && selectedSoundOption?.file && (
           <audio
@@ -247,7 +340,7 @@ export default function MeditationTimer() {
                 onChange={(e) => setSelectedSound(e.target.value)}
                 className="w-full p-3 border-2 border-indigo-200 rounded-lg focus:border-indigo-500 focus:outline-none mb-4"
               >
-                {soundOptions.map((s) => (
+                {allSounds.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}
                   </option>
