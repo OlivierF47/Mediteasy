@@ -9,9 +9,14 @@ interface SoundOption {
   isCustom?: boolean;
 }
 
+/* --------------------------------------------
+  Données statiques : sons, gongs, intervalles, durées
+-------------------------------------------- */
+
 const soundOptions: SoundOption[] = [
   { value: 'silence', label: '🔇 Silence' },
-  { value: 'rain', label: '🌧️ Pluie', file: '/assets/ambient/rain.mp3' },
+  { value: 'rain', label: '🌧️ Pluie', file: '/assets/ambients/rain.mp3' },
+  { value: 'rain', label: '🌧️ Ocean', file: '/assets/ambients/ocean.mp3' },
 ];
 
 const gongOptions = [
@@ -39,7 +44,16 @@ const durationOptions = [
   { value: 60, label: '60 min' },
 ];
 
+/* --------------------------------------------
+  Composant principal : MeditationTimer
+-------------------------------------------- */
+
 export default function MeditationTimer() {
+
+  /* -------------------------
+    États de l’application
+  -------------------------- */
+
   const [selectedSound, setSelectedSound] = useState('silence');
   const [duration, setDuration] = useState(10);
   const [customMinutes, setCustomMinutes] = useState('');
@@ -62,6 +76,14 @@ export default function MeditationTimer() {
   const gongTimerRef = useRef<NodeJS.Timeout | null>(null);
   const remainingTimeRef = useRef<number>(0);
   const nextGongTimeRef = useRef<number>(0);
+
+  /* -------------------------
+    Sélections actuelles
+  -------------------------- */
+
+  /* -------------------------
+    Sélections actuelles
+  -------------------------- */
 
   // Charger les sons personnalisés au démarrage
   useEffect(() => {
@@ -138,6 +160,10 @@ export default function MeditationTimer() {
   const selectedSoundOption = allSounds.find((s) => s.value === selectedSound);
   const selectedGongOption = gongOptions.find((g) => g.id === selectedGong);
 
+  /* -------------------------
+    Effets pour ajuster les volumes
+  -------------------------- */
+
   useEffect(() => {
     if (ambientAudioRef.current) {
       ambientAudioRef.current.volume = volume;
@@ -150,6 +176,10 @@ export default function MeditationTimer() {
     }
   }, [gongVolume]);
 
+  /* -------------------------
+    Fonction pour jouer le gong
+  -------------------------- */
+
   const playGong = () => {
     if (gongAudioRef.current) {
       gongAudioRef.current.currentTime = 0;
@@ -157,11 +187,19 @@ export default function MeditationTimer() {
     }
   };
 
+  /* -------------------------
+    Formatage du temps
+  -------------------------- */
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  /* -------------------------
+    Lancer la méditation
+  -------------------------- */
 
   const handlePlay = () => {
     setIsPlaying(true);
@@ -170,21 +208,26 @@ export default function MeditationTimer() {
     setTimeRemaining(totalSeconds);
     setNextGongIn(gongInterval > 0 ? gongInterval * 60 : 0);
 
+    // Gong de début (si activé)
     if (gongMoments.start) {
       setTimeout(() => playGong(), 500);
     }
 
+    // Lecture du son ambiant
     if (selectedSound !== 'silence' && ambientAudioRef.current) {
       ambientAudioRef.current.currentTime = 0;
       ambientAudioRef.current.volume = volume;
       ambientAudioRef.current.play().catch((err) => console.error('Erreur audio:', err));
     }
 
+    // Timer principal (compte à rebours)
     let remaining = totalSeconds;
     timerRef.current = setInterval(() => {
       remaining--;
       setTimeRemaining(remaining);
       
+
+      // Fin du timer
       if (remaining <= 0) {
         handleStop();
         setIsFinished(true);
@@ -213,6 +256,10 @@ export default function MeditationTimer() {
     }
   };
 
+  /* -------------------------
+    Pause de la méditation
+  -------------------------- */
+
   const handlePause = () => {
     setIsPlaying(false);
     if (ambientAudioRef.current) {
@@ -225,6 +272,10 @@ export default function MeditationTimer() {
       clearInterval(gongTimerRef.current);
     }
   };
+
+  /* -------------------------
+    Arrêt de la méditation
+  -------------------------- */
 
   const handleStop = () => {
     setIsPlaying(false);
@@ -242,6 +293,10 @@ export default function MeditationTimer() {
     setNextGongIn(0);
   };
 
+    /* -------------------------
+    Gestion de la durée personnalisé
+  -------------------------- */
+
   const handleAddCustomDuration = () => {
     const minutes = parseInt(customMinutes, 10);
     if (!isNaN(minutes) && minutes >= 1 && minutes <= 180) {
@@ -251,6 +306,10 @@ export default function MeditationTimer() {
     }
   };
 
+  /* -------------------------
+    Test son du gong
+  -------------------------- */
+
   const handleTestGong = () => {
     if (gongAudioRef.current) {
       gongAudioRef.current.currentTime = 0;
@@ -258,11 +317,16 @@ export default function MeditationTimer() {
     }
   };
 
+    /* -------------------------
+    Interface utilisateur (UI)
+  -------------------------- */
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 py-8 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-        <h1 className="text-4xl font-bold text-center text-indigo-900 mb-8">
+    <div className="">
+      <div className="">
+
+        {/* Titre principal */}
+        <h1 className="">
           🧘 Méditation Timer
         </h1>
 
@@ -300,6 +364,41 @@ export default function MeditationTimer() {
           )}
         </div>
 
+        {/* Section pour les sons personnalisés */}
+        <div className="mb-6 p-6 bg-yellow-50 rounded-xl">
+          <h2 className="text-xl font-semibold text-yellow-900 mb-4">
+            Sons personnalisés
+          </h2>
+          <button
+            onClick={addCustomSound}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors mb-4"
+          >
+            ➕ Ajouter un son personnalisé
+          </button>
+
+          {customSounds.length > 0 ? (
+            <ul className="space-y-2">
+              {customSounds.map((sound) => (
+                <li
+                  key={sound.value}
+                  className="flex items-center justify-between p-3 bg-yellow-100 rounded-lg"
+                >
+                  <span>{sound.label}</span>
+                  <button
+                    onClick={() => setSelectedSound(sound.value)}
+                    className="text-yellow-800 hover:text-yellow-900 font-medium"
+                  >
+                    🎵 Sélectionner
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-yellow-800">Aucun son personnalisé ajouté.</p>
+          )}
+        </div>
+
+        {/* Fichiers audio cachés (préchargés) */}
         {selectedSound !== 'silence' && selectedSoundOption?.file && (
           <audio
             ref={ambientAudioRef}
@@ -317,28 +416,31 @@ export default function MeditationTimer() {
           />
         )}
 
+        {/* Affichage du temps pendant la méditation */}
         {isPlaying && (
-          <div className="mb-8 text-center bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl p-6">
-            <div className="text-6xl font-bold mb-2">{formatTime(timeRemaining)}</div>
-            <div className="text-lg opacity-90">Temps restant</div>
+          <div className="">
+            <div className="">{formatTime(timeRemaining)}</div>
+            <div className="">Temps restant</div>
             {gongInterval > 0 && nextGongIn > 0 && (
-              <div className="mt-4 text-sm opacity-80">
+              <div className="">
                 🔔 Prochain gong dans {formatTime(nextGongIn)}
               </div>
             )}
           </div>
         )}
 
+        {/* Configuration avant démarrage */}
         {!isPlaying && !isFinished && (
           <>
-            <div className="mb-6 p-6 bg-indigo-50 rounded-xl">
-              <h2 className="text-xl font-semibold text-indigo-900 mb-4">
+            {/* Section : Son ambiant */}
+            <div className="">
+              <h2 className="">
                 Son ambiant
               </h2>
               <select
                 value={selectedSound}
                 onChange={(e) => setSelectedSound(e.target.value)}
-                className="w-full p-3 border-2 border-indigo-200 rounded-lg focus:border-indigo-500 focus:outline-none mb-4"
+                className=""
               >
                 {allSounds.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -346,10 +448,11 @@ export default function MeditationTimer() {
                   </option>
                 ))}
               </select>
-
+              
+              {/* Curseur volume */}
               {selectedSound !== 'silence' && (
                 <div>
-                  <label className="block text-sm font-medium text-indigo-800 mb-2">
+                  <label className="">
                     Volume ambiant: {Math.round(volume * 100)}%
                   </label>
                   <input
@@ -359,25 +462,27 @@ export default function MeditationTimer() {
                     step="0.01"
                     value={volume}
                     onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    className="w-full"
+                    className=""
                   />
                 </div>
               )}
             </div>
 
-            <div className="mb-6 p-6 bg-purple-50 rounded-xl">
-              <h2 className="text-xl font-semibold text-purple-900 mb-4">
+            {/* Section : Gong de méditation */}
+            <div className="">
+              <h2 className="">
                 Gong de méditation
               </h2>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-purple-800 mb-2">
+
+              {/* Choix du type de gong */}
+              <div className="">
+                <label className="">
                   Type de gong
                 </label>
                 <select
                   value={selectedGong}
                   onChange={(e) => setSelectedGong(e.target.value)}
-                  className="w-full p-3 border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                  className=""
                 >
                   {gongOptions.map((g) => (
                     <option key={g.id} value={g.id}>
@@ -387,8 +492,9 @@ export default function MeditationTimer() {
                 </select>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-purple-800 mb-2">
+              {/* Volume du gong */}
+              <div className="">
+                <label className="">
                   Volume du gong: {Math.round(gongVolume * 100)}%
                 </label>
                 <input
@@ -398,18 +504,19 @@ export default function MeditationTimer() {
                   step="0.01"
                   value={gongVolume}
                   onChange={(e) => setGongVolume(parseFloat(e.target.value))}
-                  className="w-full"
+                  className=""
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-purple-800 mb-2">
+              {/* Fréquence et moments des gongs */}
+              <div className="">
+                <label className="">
                   Fréquence des gongs
                 </label>
                 <select
                   value={gongInterval}
                   onChange={(e) => setGongInterval(parseInt(e.target.value))}
-                  className="w-full p-3 border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                  className=""
                 >
                   {intervalOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -419,46 +526,49 @@ export default function MeditationTimer() {
                 </select>
               </div>
 
-              <div className="mb-4 space-y-2">
-                <label className="block text-sm font-medium text-purple-800 mb-2">
+              {/* Gongs au début / fin */}
+              <div className="">
+                <label className="">
                   Gong aux moments clés
                 </label>
-                <label className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-purple-100 rounded-lg transition-colors">
+                <label className="">
                   <input
                     type="checkbox"
                     checked={gongMoments.start}
                     onChange={(e) => setGongMoments({ ...gongMoments, start: e.target.checked })}
-                    className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                    className=""
                   />
-                  <span className="text-purple-900">🔔 Au début de la session</span>
+                  <span className="">🔔 Au début de la session</span>
                 </label>
-                <label className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-purple-100 rounded-lg transition-colors">
+                <label className="">
                   <input
                     type="checkbox"
                     checked={gongMoments.end}
                     onChange={(e) => setGongMoments({ ...gongMoments, end: e.target.checked })}
-                    className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                    className=""
                   />
-                  <span className="text-purple-900">🔔 À la fin de la session</span>
+                  <span className="">🔔 À la fin de la session</span>
                 </label>
               </div>
 
+              {/* Bouton de test */}
               <button
                 onClick={handleTestGong}
-                className="w-full bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                className=""
               >
                 🔊 Tester le gong
               </button>
             </div>
 
-            <div className="mb-6 p-6 bg-pink-50 rounded-xl">
-              <h2 className="text-xl font-semibold text-pink-900 mb-4">
+            {/* Section : Durée de méditation */}
+            <div className="">
+              <h2 className="">
                 Durée de méditation
               </h2>
               <select
                 value={duration}
                 onChange={(e) => setDuration(parseInt(e.target.value))}
-                className="w-full p-3 border-2 border-pink-200 rounded-lg focus:border-pink-500 focus:outline-none mb-4"
+                className=""
               >
                 {durationOptions.map((d) => (
                   <option key={d.value} value={d.value}>
@@ -467,15 +577,16 @@ export default function MeditationTimer() {
                 ))}
               </select>
 
+              {/* Option durée personnalisée */}
               {!showCustomInput ? (
                 <button
                   onClick={() => setShowCustomInput(true)}
-                  className="w-full bg-pink-100 hover:bg-pink-200 text-pink-800 font-medium py-2 px-4 rounded-lg transition-colors"
+                  className=""
                 >
                   ➕ Durée personnalisée
                 </button>
               ) : (
-                <div className="flex gap-2">
+                <div className="">
                   <input
                     type="number"
                     value={customMinutes}
@@ -483,14 +594,14 @@ export default function MeditationTimer() {
                     placeholder="1-180 min"
                     min="1"
                     max="180"
-                    className="flex-1 p-3 border-2 border-pink-200 rounded-lg focus:border-pink-500 focus:outline-none"
+                    className=""
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') handleAddCustomDuration();
                     }}
                   />
                   <button
                     onClick={handleAddCustomDuration}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 rounded-lg"
+                    className=""
                   >
                     ✓
                   </button>
@@ -499,7 +610,7 @@ export default function MeditationTimer() {
                       setShowCustomInput(false);
                       setCustomMinutes('');
                     }}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 rounded-lg"
+                    className=""
                   >
                     ✕
                   </button>
@@ -509,11 +620,12 @@ export default function MeditationTimer() {
           </>
         )}
 
-        <div className="flex gap-4 justify-center">
+        {/* Boutons d’action : Démarrer / Pause / Stop */}
+        <div className="">
           {!isPlaying && (
             <button
               onClick={handlePlay}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all transform hover:scale-105 shadow-lg"
+              className=""
             >
               {isFinished ? '🔄 Recommencer' : '▶️ Démarrer'}
             </button>
@@ -523,13 +635,13 @@ export default function MeditationTimer() {
             <>
               <button
                 onClick={handlePause}
-                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all transform hover:scale-105 shadow-lg"
+                className=""
               >
                 ⏸️ Pause
               </button>
               <button
                 onClick={handleStop}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all transform hover:scale-105 shadow-lg"
+                className=""
               >
                 ⏹️ Arrêter
               </button>
@@ -537,10 +649,11 @@ export default function MeditationTimer() {
           )}
         </div>
 
+        {/* Message de fin de session */}
         {isFinished && (
-          <div className="mt-6 text-center p-6 bg-green-100 rounded-xl">
-            <div className="text-3xl mb-2">✨</div>
-            <div className="text-xl font-semibold text-green-800">
+          <div className="">
+            <div className="">✨</div>
+            <div className="">
               Méditation terminée !
             </div>
           </div>
