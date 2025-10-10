@@ -17,7 +17,7 @@ interface SoundOption {
 const soundOptions: SoundOption[] = [
   { value: 'silence', label: '🔇 Silence' },
   { value: 'rain', label: '🌧️ Pluie', file: '/assets/ambients/rain.mp3' },
-  { value: 'rain', label: '🌧️ Ocean', file: '/assets/ambients/ocean.mp3' },
+  { value: 'ocean', label: '🌊 Ocean', file: '/assets/ambients/ocean.mp3' },
 ];
 
 const gongOptions = [
@@ -52,7 +52,7 @@ const durationOptions = [
 export default function MeditationTimer() {
 
   /* -------------------------
-    États de l’application
+    États de l'application
   -------------------------- */
 
   const [selectedSound, setSelectedSound] = useState('silence');
@@ -75,8 +75,6 @@ export default function MeditationTimer() {
   const gongAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const gongTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const remainingTimeRef = useRef<number>(0);
-  const nextGongTimeRef = useRef<number>(0);
 
   /* -------------------------
     Sélections actuelles
@@ -200,6 +198,7 @@ export default function MeditationTimer() {
 
   const handlePlay = () => {
     setIsPlaying(true);
+    setIsPaused(false);
     setIsFinished(false);
     const totalSeconds = duration * 60;
     setTimeRemaining(totalSeconds);
@@ -222,7 +221,6 @@ export default function MeditationTimer() {
     timerRef.current = setInterval(() => {
       remaining--;
       setTimeRemaining(remaining);
-      
 
       // Fin du timer
       if (remaining <= 0) {
@@ -259,6 +257,8 @@ export default function MeditationTimer() {
 
   const handlePause = () => {
     setIsPlaying(false);
+    setIsPaused(true);
+
     if (ambientAudioRef.current) {
       ambientAudioRef.current.pause();
     }
@@ -271,11 +271,56 @@ export default function MeditationTimer() {
   };
 
   /* -------------------------
+    Reprise de la méditation
+  -------------------------- */
+
+  const handleResume = () => {
+    setIsPlaying(true);
+    setIsPaused(false);
+
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.play();
+    }
+
+    // Relancer le timer principal avec le temps restant
+    let remaining = timeRemaining;
+    timerRef.current = setInterval(() => {
+      remaining--;
+      setTimeRemaining(remaining);
+
+      if (remaining <= 0) {
+        handleStop();
+        setIsFinished(true);
+        if (gongMoments.end) {
+          playGong();
+        }
+      }
+    }, 1000);
+
+    // Relancer le timer des gongs si nécessaire
+    if (gongInterval > 0) {
+      let nextGong = nextGongIn;
+      gongTimerRef.current = setInterval(() => {
+        nextGong--;
+        setNextGongIn(nextGong);
+
+        if (nextGong <= 0 && remaining > 0) {
+          playGong();
+          nextGong = gongInterval * 60;
+          setNextGongIn(nextGong);
+        }
+      }, 1000);
+    }
+  };
+
+  /* -------------------------
     Arrêt de la méditation
   -------------------------- */
 
   const handleStop = () => {
     setIsPlaying(false);
+    setIsPaused(false);
+
     if (ambientAudioRef.current) {
       ambientAudioRef.current.pause();
       ambientAudioRef.current.currentTime = 0;
@@ -290,8 +335,8 @@ export default function MeditationTimer() {
     setNextGongIn(0);
   };
 
-    /* -------------------------
-    Gestion de la durée personnalisé
+  /* -------------------------
+    Gestion de la durée personnalisée
   -------------------------- */
 
   const handleAddCustomDuration = () => {
@@ -314,263 +359,275 @@ export default function MeditationTimer() {
     }
   };
 
-    /* -------------------------
+  /* -------------------------
     Interface utilisateur (UI)
   -------------------------- */
 
   return (
-  <div className="app">
-    <div className="container">
+    <div className="app">
+      <div className="container">
 
-      {/* Titre principal */}
-      <h1 className="title-main">🧘 Méditation Timer</h1>
+        {/* Titre principal */}
+        <h1 className="title-main">🧘 Méditation Timer</h1>
 
-      {/* Section Sons personnalisés */}
-      <div className="section">
-        <h2 className="title-section">Sons personnalisés</h2>
-        <button onClick={addCustomSound} className="btn btn-primary">
-          ➕ Ajouter un son personnalisé
-        </button>
-
-        {customSounds.length > 0 ? (
-          <ul className="list">
-            {customSounds.map((sound) => (
-              <li key={sound.value} className="list-item">
-                <span>{sound.label}</span>
-                <button
-                  onClick={() => setSelectedSound(sound.value)}
-                  className="btn btn-secondary"
-                >
-                  🎵 Sélectionner
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-muted">Aucun son personnalisé ajouté.</p>
-        )}
-      </div>
-
-      {/* Fichiers audio cachés */}
-      {selectedSound !== 'silence' && selectedSoundOption?.file && (
-        <audio
-          ref={ambientAudioRef}
-          loop
-          preload="auto"
-          src={selectedSoundOption.file}
-        />
-      )}
-
-      {selectedGongOption && (
-        <audio
-          ref={gongAudioRef}
-          preload="auto"
-          src={selectedGongOption.file}
-        />
-      )}
-
-      {/* Affichage pendant la méditation */}
-      {isPlaying && (
+        {/* Section Sons personnalisés */}
         <div className="section">
-          <div className="time-display">{formatTime(timeRemaining)}</div>
-          <div className="text-muted">Temps restant</div>
-          {gongInterval > 0 && nextGongIn > 0 && (
-            <div className="text-muted">
-              🔔 Prochain gong dans {formatTime(nextGongIn)}
-            </div>
+          <h2 className="title-section">Sons personnalisés</h2>
+          <button onClick={addCustomSound} className="btn btn-primary">
+            ➕ Ajouter un son personnalisé
+          </button>
+
+          {customSounds.length > 0 ? (
+            <ul className="list">
+              {customSounds.map((sound) => (
+                <li key={sound.value} className="list-item">
+                  <span>{sound.label}</span>
+                  <button
+                    onClick={() => setSelectedSound(sound.value)}
+                    className="btn btn-secondary"
+                  >
+                    🎵 Sélectionner
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted">Aucun son personnalisé ajouté.</p>
           )}
         </div>
-      )}
 
-      {/* Configuration avant démarrage */}
-      {!isPlaying && !isFinished && (
-        <>
-          {/* Son ambiant */}
+        {/* Fichiers audio cachés */}
+        {selectedSound !== 'silence' && selectedSoundOption?.file && (
+          <audio
+            ref={ambientAudioRef}
+            loop
+            preload="auto"
+            src={selectedSoundOption.file}
+          />
+        )}
+
+        {selectedGongOption && (
+          <audio
+            ref={gongAudioRef}
+            preload="auto"
+            src={selectedGongOption.file}
+          />
+        )}
+
+        {/* Affichage pendant la méditation ou en pause */}
+        {(isPlaying || isPaused) && (
           <div className="section">
-            <h2 className="title-section">Son ambiant</h2>
-            <select
-              value={selectedSound}
-              onChange={(e) => setSelectedSound(e.target.value)}
-              className="select"
-            >
-              {allSounds.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-
-            {selectedSound !== 'silence' && (
-              <div className="section">
-                <label className="label">
-                  Volume ambiant: {Math.round(volume * 100)}%
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={volume}
-                  onChange={(e) => setVolume(parseFloat(e.target.value))}
-                  className="range"
-                />
+            <div className="time-display">{formatTime(timeRemaining)}</div>
+            <div className="text-muted">
+              {isPaused ? '⏸️ En pause' : 'Temps restant'}
+            </div>
+            {gongInterval > 0 && nextGongIn > 0 && !isPaused && (
+              <div className="text-muted">
+                🔔 Prochain gong dans {formatTime(nextGongIn)}
               </div>
             )}
           </div>
+        )}
 
-          {/* Gong de méditation */}
-          <div className="section">
-            <h2 className="title-section">Gong de méditation</h2>
-
-            <label className="label">Type de gong</label>
-            <select
-              value={selectedGong}
-              onChange={(e) => setSelectedGong(e.target.value)}
-              className="select"
-            >
-              {gongOptions.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-
-            <label className="label">
-              Volume du gong: {Math.round(gongVolume * 100)}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={gongVolume}
-              onChange={(e) => setGongVolume(parseFloat(e.target.value))}
-              className="range"
-            />
-
-            <label className="label">Fréquence des gongs</label>
-            <select
-              value={gongInterval}
-              onChange={(e) => setGongInterval(parseInt(e.target.value))}
-              className="select"
-            >
-              {intervalOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-
+        {/* Configuration avant démarrage */}
+        {!isPlaying && !isPaused && !isFinished && (
+          <>
+            {/* Son ambiant */}
             <div className="section">
-              <label className="label">Gong aux moments clés</label>
-              <label className="checkbox">
-                <input
-                  type="checkbox"
-                  checked={gongMoments.start}
-                  onChange={(e) =>
-                    setGongMoments({ ...gongMoments, start: e.target.checked })
-                  }
-                />
-                🔔 Au début de la session
-              </label>
-              <label className="checkbox">
-                <input
-                  type="checkbox"
-                  checked={gongMoments.end}
-                  onChange={(e) =>
-                    setGongMoments({ ...gongMoments, end: e.target.checked })
-                  }
-                />
-                🔔 À la fin de la session
-              </label>
+              <h2 className="title-section">Son ambiant</h2>
+              <select
+                value={selectedSound}
+                onChange={(e) => setSelectedSound(e.target.value)}
+                className="select"
+              >
+                {allSounds.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+
+              {selectedSound !== 'silence' && (
+                <div className="section">
+                  <label className="label">
+                    Volume ambiant: {Math.round(volume * 100)}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={volume}
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    className="range"
+                  />
+                </div>
+              )}
             </div>
 
-            <button onClick={handleTestGong} className="btn btn-secondary">
-              🔊 Tester le gong
-            </button>
-          </div>
+            {/* Gong de méditation */}
+            <div className="section">
+              <h2 className="title-section">Gong de méditation</h2>
 
-          {/* Durée de méditation */}
-          <div className="section">
-            <h2 className="title-section">Durée de méditation</h2>
-            <select
-              value={duration}
-              onChange={(e) => setDuration(parseInt(e.target.value))}
-              className="select"
-            >
-              {durationOptions.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-
-            {!showCustomInput ? (
-              <button
-                onClick={() => setShowCustomInput(true)}
-                className="btn btn-secondary"
+              <label className="label">Type de gong</label>
+              <select
+                value={selectedGong}
+                onChange={(e) => setSelectedGong(e.target.value)}
+                className="select"
               >
-                ➕ Durée personnalisée
-              </button>
-            ) : (
+                {gongOptions.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+
+              <label className="label">
+                Volume du gong: {Math.round(gongVolume * 100)}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={gongVolume}
+                onChange={(e) => setGongVolume(parseFloat(e.target.value))}
+                className="range"
+              />
+
+              <label className="label">Fréquence des gongs</label>
+              <select
+                value={gongInterval}
+                onChange={(e) => setGongInterval(parseInt(e.target.value))}
+                className="select"
+              >
+                {intervalOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+
               <div className="section">
-                <input
-                  type="number"
-                  value={customMinutes}
-                  onChange={(e) => setCustomMinutes(e.target.value)}
-                  placeholder="1-180 min"
-                  min="1"
-                  max="180"
-                  className="input"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') handleAddCustomDuration();
-                  }}
-                />
-                <button onClick={handleAddCustomDuration} className="btn btn-primary">
-                  ✓
-                </button>
+                <label className="label">Gong aux moments clés</label>
+                <label className="checkbox">
+                  <input
+                    type="checkbox"
+                    checked={gongMoments.start}
+                    onChange={(e) =>
+                      setGongMoments({ ...gongMoments, start: e.target.checked })
+                    }
+                  />
+                  🔔 Au début de la session
+                </label>
+                <label className="checkbox">
+                  <input
+                    type="checkbox"
+                    checked={gongMoments.end}
+                    onChange={(e) =>
+                      setGongMoments({ ...gongMoments, end: e.target.checked })
+                    }
+                  />
+                  🔔 À la fin de la session
+                </label>
+              </div>
+
+              <button onClick={handleTestGong} className="btn btn-secondary">
+                🔊 Tester le gong
+              </button>
+            </div>
+
+            {/* Durée de méditation */}
+            <div className="section">
+              <h2 className="title-section">Durée de méditation</h2>
+              <select
+                value={duration}
+                onChange={(e) => setDuration(parseInt(e.target.value))}
+                className="select"
+              >
+                {durationOptions.map((d) => (
+                  <option key={d.value} value={d.value}>
+                    {d.label}
+                  </option>
+                ))}
+              </select>
+
+              {!showCustomInput ? (
                 <button
-                  onClick={() => {
-                    setShowCustomInput(false);
-                    setCustomMinutes('');
-                  }}
+                  onClick={() => setShowCustomInput(true)}
                   className="btn btn-secondary"
                 >
-                  ✕
+                  ➕ Durée personnalisée
                 </button>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Boutons Démarrer / Pause / Stop */}
-      <div className="section">
-        {!isPlaying && (
-          <button onClick={handlePlay} className="btn btn-primary">
-            {isFinished ? '🔄 Recommencer' : '▶️ Démarrer'}
-          </button>
+              ) : (
+                <div className="section">
+                  <input
+                    type="number"
+                    value={customMinutes}
+                    onChange={(e) => setCustomMinutes(e.target.value)}
+                    placeholder="1-180 min"
+                    min="1"
+                    max="180"
+                    className="input"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') handleAddCustomDuration();
+                    }}
+                  />
+                  <button onClick={handleAddCustomDuration} className="btn btn-primary">
+                    ✓
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowCustomInput(false);
+                      setCustomMinutes('');
+                    }}
+                    className="btn btn-secondary"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
-        {isPlaying && (
-          <>
-            <button onClick={handlePause} className="btn btn-secondary">
-              ⏸️ Pause
+
+        {/* Boutons Démarrer / Pause / Reprendre / Stop */}
+        <div className="section">
+          {!isPlaying && !isPaused && (
+            <button onClick={handlePlay} className="btn btn-primary">
+              {isFinished ? '🔄 Recommencer' : '▶️ Démarrer'}
             </button>
+          )}
+          {isPaused && (
+            <button onClick={handleResume} className="btn btn-primary">
+              ▶️ Reprendre
+            </button>
+          )}
+          {isPlaying && (
+            <>
+              <button onClick={handlePause} className="btn btn-secondary">
+                ⏸️ Pause
+              </button>
+              <button onClick={handleStop} className="btn btn-secondary">
+                ⏹️ Arrêter
+              </button>
+            </>
+          )}
+          {isPaused && (
             <button onClick={handleStop} className="btn btn-secondary">
               ⏹️ Arrêter
             </button>
-          </>
+          )}
+        </div>
+
+        {/* Fin de session */}
+        {isFinished && (
+          <div className="section">
+            <div className="emoji">✨</div>
+            <div className="title-section">Méditation terminée !</div>
+          </div>
         )}
       </div>
-
-      {/* Fin de session */}
-      {isFinished && (
-        <div className="section">
-          <div className="emoji">✨</div>
-          <div className="title-section">Méditation terminée !</div>
-        </div>
-      )}
     </div>
-  </div>
-);
+  );
 }
