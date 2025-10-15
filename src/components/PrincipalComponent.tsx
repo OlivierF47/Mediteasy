@@ -138,16 +138,7 @@ export default function MeditationTimer() {
         directory: Directory.Data,
       });
 
-      const newSound: SoundOption = {
-        value: soundId,
-        label: `🎵 ${file.name.split('.')[0]}`,
-        file: `audio/${fileName}`,
-        isCustom: true,
-      };
-
-      const updatedSounds = [...customSounds, newSound];
-      setCustomSounds(updatedSounds);
-      saveCustomSounds(updatedSounds);
+      console.log(`Son ajouté : ${fileName}`);
     } catch (error) {
       console.error('Erreur lors de la sélection ou de la sauvegarde du fichier :', error);
     }
