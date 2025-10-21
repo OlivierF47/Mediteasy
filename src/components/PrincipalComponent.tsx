@@ -21,10 +21,8 @@ const soundOptions: SoundOption[] = [
 ];
 
 const gongOptions = [
-  { id: 'gong1', name: 'Gong Tibétain', file: '/assets/gongs/gong_hit.wav' },
-  { id: 'gong2', name: 'Gong Chinois', file: '/assets/gongs/roger_gong.mp3' },
-  { id: 'gong3', name: 'Gong Japonais', file: '/assets/gongs/studio_gong.wav' },
-  { id: 'gong4', name: 'Gong Zen', file: '/assets/gongs/zen_gong.wav' },
+  { id: 'gong1', name: 'Gong Japonais', file: '/assets/gongs/studio_gong.wav' },
+  { id: 'gong2', name: 'Gong Zen', file: '/assets/gongs/zen_gong.wav' },
 ];
 
 const intervalOptions = [
@@ -70,11 +68,14 @@ export default function MeditationTimer() {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [nextGongIn, setNextGongIn] = useState(0);
   const [customSounds, setCustomSounds] = useState<SoundOption[]>([]);
+  const [preparationTime, setPreparationTime] = useState(0);
+  const [isPreparing, setIsPreparing] = useState(false);
 
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
   const gongAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const gongTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const preparationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   /* -------------------------
     Sélections actuelles
@@ -188,6 +189,26 @@ export default function MeditationTimer() {
   -------------------------- */
 
   const handlePlay = () => {
+    // Démarrer la phase de préparation
+    setIsPreparing(true);
+    setPreparationTime(10); // 10 secondes de préparation
+
+    let prepTime = 10;
+    preparationTimerRef.current = setInterval(() => {
+      prepTime--;
+      setPreparationTime(prepTime);
+
+      if (prepTime <= 0) {
+        if (preparationTimerRef.current) {
+          clearInterval(preparationTimerRef.current);
+        }
+        setIsPreparing(false);
+        startMeditation();
+      }
+    }, 1000);
+  };
+
+  const startMeditation = () => {
     setIsPlaying(true);
     setIsPaused(false);
     setIsFinished(false);
@@ -392,6 +413,14 @@ export default function MeditationTimer() {
                 🔔 Prochain gong dans {formatTime(nextGongIn)}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Phase de préparation */}
+        {isPreparing && (
+          <div className="section">
+            <div className="time-display">{preparationTime}</div>
+            <div className="text-muted">🧘 Préparez-vous...</div>
           </div>
         )}
 
