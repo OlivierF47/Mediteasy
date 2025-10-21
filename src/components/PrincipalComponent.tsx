@@ -113,7 +113,7 @@ export default function MeditationTimer() {
   };
 
   // Ajouter un son personnalisé
-  const addCustomSound = async () => {
+ const addCustomSound = async () => {
     try {
       const result = await FilePicker.pickFiles({
         types: ['audio/*'],
@@ -128,6 +128,7 @@ export default function MeditationTimer() {
       const file = result.files[0];
       const soundId = `custom_${Date.now()}`;
       const fileName = `${soundId}.${file.name.split('.').pop()}`;
+      const soundName = file.name.replace(/\.[^/.]+$/, ""); // Nom sans extension
 
       // Sauvegarder le fichier dans le système de fichiers
       await Filesystem.writeFile({
@@ -136,9 +137,64 @@ export default function MeditationTimer() {
         directory: Directory.Data,
       });
 
-      console.log(`Son ajouté : ${fileName}`);
+      // Créer l'objet son personnalisé
+      const newCustomSound: SoundOption = {
+        value: soundId,
+        label: `🎵 ${soundName}`,
+        file: `audio/${fileName}`,
+        isCustom: true
+      };
+
+      // Mettre à jour la liste des sons personnalisés
+      const updatedCustomSounds = [...customSounds, newCustomSound];
+      setCustomSounds(updatedCustomSounds);
+      
+      // Sauvegarder dans le stockage persistant
+      await saveCustomSounds(updatedCustomSounds);
+
+      // Sélectionner automatiquement le nouveau son
+      setSelectedSound(soundId);
+
+      console.log(`Son ajouté et sélectionné : ${soundName}`);
     } catch (error) {
       console.error('Erreur lors de la sélection ou de la sauvegarde du fichier :', error);
+    }
+  };
+
+  // Supprimer un son personnalisé
+  const removeCustomSound = async (soundId: string) => {
+    try {
+      // Trouver le son à supprimer
+      const soundToRemove = customSounds.find(sound => sound.value === soundId);
+      if (!soundToRemove) return;
+
+      // Supprimer le fichier audio du système de fichiers
+      if (soundToRemove.file) {
+        try {
+          await Filesystem.deleteFile({
+            path: soundToRemove.file,
+            directory: Directory.Data,
+          });
+        } catch (error) {
+          console.warn('Impossible de supprimer le fichier audio:', error);
+        }
+      }
+
+      // Mettre à jour la liste des sons personnalisés
+      const updatedCustomSounds = customSounds.filter(sound => sound.value !== soundId);
+      setCustomSounds(updatedCustomSounds);
+      
+      // Sauvegarder dans le stockage persistant
+      await saveCustomSounds(updatedCustomSounds);
+
+      // Si le son supprimé était sélectionné, revenir au silence
+      if (selectedSound === soundId) {
+        setSelectedSound('silence');
+      }
+
+      console.log(`Son supprimé : ${soundToRemove.label}`);
+    } catch (error) {
+      console.error('Erreur lors de la suppression du son personnalisé :', error);
     }
   };
 
@@ -401,26 +457,41 @@ export default function MeditationTimer() {
             {/* Son ambiant */}
             <div className="section">
               <h2 className="title-section">Son ambiant</h2>
-              <select
-                value={selectedSound}
-                onChange={(e) =>{const value = e.target.value
-                  if(value === "custom"){
-                    addCustomSound()
-                  }else{
-                    setSelectedSound(value);
-                  }
-                }}
-                className="select"
-              >
-                {allSounds.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-                <option value="custom">⬇️ Ajouter un son personaliser</option>
-              </select>
-
-              {selectedSound !== 'silence' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <select
+                  value={selectedSound}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if(value === "custom"){
+                      e.target.value = selectedSound;
+                      addCustomSound();
+                    } else {
+                      setSelectedSound(value);
+                    }
+                  }}
+                  className="select-1"
+                >
+                  {soundOptions.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                  {customSounds.map((s) =>(
+                    <option key ={s.value} value={s.value}>
+                      {s.label}
+                      
+                    </option>
+                  ))}
+                  <option value="custom">⬇️ Ajouter un son personaliser</option>
+                </select>
+                {selectedSoundOption?.isCustom &&(
+                  <button onClick={() => removeCustomSound(selectedSound)} className="sup-custom">
+                    <img src="/assets/images/trash.svg" alt="Supprimer" className='trash-btn' />
+                  </button>
+                )
+                }
+              </div>
+              {selectedSound !== 'silence' &&(
                 <div className="section">
                   <label className="label">
                     Volume ambiant: {Math.round(volume * 100)}%
