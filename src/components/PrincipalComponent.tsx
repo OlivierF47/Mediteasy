@@ -361,31 +361,6 @@ export default function MeditationTimer() {
         {/* Titre principal */}
         <h1 className="title-main">🧘 Méditation Timer</h1>
 
-        {/* Section Sons personnalisés */}
-        <div className="section">
-          <h2 className="title-section">Sons personnalisés</h2>
-          <button onClick={addCustomSound} className="btn btn-primary">
-            ➕ Ajouter un son personnalisé
-          </button>
-
-          {customSounds.length > 0 ? (
-            <ul className="list">
-              {customSounds.map((sound) => (
-                <li key={sound.value} className="list-item">
-                  <span>{sound.label}</span>
-                  <button
-                    onClick={() => setSelectedSound(sound.value)}
-                    className="btn btn-secondary"
-                  >
-                    🎵 Sélectionner
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-muted">Aucun son personnalisé ajouté.</p>
-          )}
-        </div>
 
         {/* Fichiers audio cachés */}
         {selectedSound !== 'silence' && selectedSoundOption?.file && (
@@ -428,7 +403,13 @@ export default function MeditationTimer() {
               <h2 className="title-section">Son ambiant</h2>
               <select
                 value={selectedSound}
-                onChange={(e) => setSelectedSound(e.target.value)}
+                onChange={(e) =>{const value = e.target.value
+                  if(value === "custom"){
+                    addCustomSound()
+                  }else{
+                    setSelectedSound(value);
+                  }
+                }}
                 className="select"
               >
                 {allSounds.map((s) => (
@@ -436,6 +417,7 @@ export default function MeditationTimer() {
                     {s.label}
                   </option>
                 ))}
+                <option value="custom">⬇️ Ajouter un son personaliser</option>
               </select>
 
               {selectedSound !== 'silence' && (
