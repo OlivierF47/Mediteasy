@@ -21,10 +21,8 @@ const soundOptions: SoundOption[] = [
 ];
 
 const gongOptions = [
-  { id: 'gong1', name: 'Gong Tibétain', file: '/assets/gongs/gong_hit.wav' },
-  { id: 'gong2', name: 'Gong Chinois', file: '/assets/gongs/roger_gong.mp3' },
-  { id: 'gong3', name: 'Gong Japonais', file: '/assets/gongs/studio_gong.wav' },
-  { id: 'gong4', name: 'Gong Zen', file: '/assets/gongs/zen_gong.wav' },
+  { id: 'gong1', name: 'Gong Japonais', file: '/assets/gongs/studio_gong.wav' },
+  { id: 'gong2', name: 'Gong Zen', file: '/assets/gongs/zen_gong.wav' },
 ];
 
 const intervalOptions = [
@@ -70,11 +68,14 @@ export default function MeditationTimer() {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [nextGongIn, setNextGongIn] = useState(0);
   const [customSounds, setCustomSounds] = useState<SoundOption[]>([]);
+  const [preparationTime, setPreparationTime] = useState(0);
+  const [isPreparing, setIsPreparing] = useState(false);
 
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
   const gongAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const gongTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const preparationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   /* -------------------------
     Sélections actuelles
@@ -244,6 +245,26 @@ export default function MeditationTimer() {
   -------------------------- */
 
   const handlePlay = () => {
+    // Démarrer la phase de préparation
+    setIsPreparing(true);
+    setPreparationTime(10); // 10 secondes de préparation
+
+    let prepTime = 10;
+    preparationTimerRef.current = setInterval(() => {
+      prepTime--;
+      setPreparationTime(prepTime);
+
+      if (prepTime <= 0) {
+        if (preparationTimerRef.current) {
+          clearInterval(preparationTimerRef.current);
+        }
+        setIsPreparing(false);
+        startMeditation();
+      }
+    }, 1000);
+  };
+
+  const startMeditation = () => {
     setIsPlaying(true);
     setIsPaused(false);
     setIsFinished(false);
@@ -415,7 +436,7 @@ export default function MeditationTimer() {
       <div className="container">
 
         {/* Titre principal */}
-        <h1 className="title-main">🧘 Méditation Timer</h1>
+        <h1 className="title-main">🧘 Mediteasy</h1>
 
 
         {/* Fichiers audio cachés */}
@@ -448,6 +469,14 @@ export default function MeditationTimer() {
                 🔔 Prochain gong dans {formatTime(nextGongIn)}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Phase de préparation */}
+        {isPreparing && (
+          <div className="section">
+            <div className="time-display">{preparationTime}</div>
+            <div className="text-muted">🧘 Préparez-vous...</div>
           </div>
         )}
 
@@ -503,58 +532,60 @@ export default function MeditationTimer() {
                     step="0.01"
                     value={volume}
                     onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    className="range"
+                    className="range compact"
                   />
+                  <span className="volume-label">{Math.round(volume * 100)}%</span>
                 </div>
               )}
             </div>
 
             {/* Gong de méditation */}
-            <div className="section">
-              <h2 className="title-section">Gong de méditation</h2>
+            <div className="section compact">
+              <div className="control-row">
+                <span className="control-icon">🔔</span>
+                <select
+                  value={selectedGong}
+                  onChange={(e) => setSelectedGong(e.target.value)}
+                  className="select compact"
+                >
+                  {gongOptions.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <label className="label">Type de gong</label>
-              <select
-                value={selectedGong}
-                onChange={(e) => setSelectedGong(e.target.value)}
-                className="select"
-              >
-                {gongOptions.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
+              <div className="volume-control">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={gongVolume}
+                  onChange={(e) => setGongVolume(parseFloat(e.target.value))}
+                  className="range compact"
+                />
+                <span className="volume-label">{Math.round(gongVolume * 100)}%</span>
+              </div>
 
-              <label className="label">
-                Volume du gong: {Math.round(gongVolume * 100)}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={gongVolume}
-                onChange={(e) => setGongVolume(parseFloat(e.target.value))}
-                className="range"
-              />
+              <div className="control-row">
+                <span className="control-icon">⏱️</span>
+                <select
+                  value={gongInterval}
+                  onChange={(e) => setGongInterval(parseInt(e.target.value))}
+                  className="select compact"
+                >
+                  {intervalOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <label className="label">Fréquence des gongs</label>
-              <select
-                value={gongInterval}
-                onChange={(e) => setGongInterval(parseInt(e.target.value))}
-                className="select"
-              >
-                {intervalOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-
-              <div className="section">
-                <label className="label">Gong aux moments clés</label>
-                <label className="checkbox">
+              <div className="checkbox-row">
+                <label className="checkbox compact">
                   <input
                     type="checkbox"
                     checked={gongMoments.start}
@@ -562,9 +593,9 @@ export default function MeditationTimer() {
                       setGongMoments({ ...gongMoments, start: e.target.checked })
                     }
                   />
-                  🔔 Au début de la session
+                  🔔 Début
                 </label>
-                <label className="checkbox">
+                <label className="checkbox compact">
                   <input
                     type="checkbox"
                     checked={gongMoments.end}
@@ -572,52 +603,54 @@ export default function MeditationTimer() {
                       setGongMoments({ ...gongMoments, end: e.target.checked })
                     }
                   />
-                  🔔 À la fin de la session
+                  🔔 Fin
                 </label>
               </div>
 
-              <button onClick={handleTestGong} className="btn btn-secondary">
-                🔊 Tester le gong
+              <button onClick={handleTestGong} className="btn btn-secondary compact">
+                🔊 Tester
               </button>
             </div>
 
             {/* Durée de méditation */}
-            <div className="section">
-              <h2 className="title-section">Durée de méditation</h2>
-              <select
-                value={duration}
-                onChange={(e) => setDuration(parseInt(e.target.value))}
-                className="select"
-              >
-                {durationOptions.map((d) => (
-                  <option key={d.value} value={d.value}>
-                    {d.label}
-                  </option>
-                ))}
-              </select>
+            <div className="section compact">
+              <div className="control-row">
+                <span className="control-icon">⏳</span>
+                <select
+                  value={duration}
+                  onChange={(e) => setDuration(parseInt(e.target.value))}
+                  className="select compact"
+                >
+                  {durationOptions.map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               {!showCustomInput ? (
                 <button
                   onClick={() => setShowCustomInput(true)}
-                  className="btn btn-secondary"
+                  className="btn btn-secondary compact"
                 >
-                  ➕ Durée personnalisée
+                  ➕ Personnaliser
                 </button>
               ) : (
-                <div className="section">
+                <div className="custom-duration">
                   <input
                     type="number"
                     value={customMinutes}
                     onChange={(e) => setCustomMinutes(e.target.value)}
-                    placeholder="1-180 min"
+                    placeholder="1-180"
                     min="1"
                     max="180"
-                    className="input"
+                    className="input compact"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') handleAddCustomDuration();
                     }}
                   />
-                  <button onClick={handleAddCustomDuration} className="btn btn-primary">
+                  <button onClick={handleAddCustomDuration} className="btn btn-primary compact">
                     ✓
                   </button>
                   <button
@@ -625,7 +658,7 @@ export default function MeditationTimer() {
                       setShowCustomInput(false);
                       setCustomMinutes('');
                     }}
-                    className="btn btn-secondary"
+                    className="btn btn-secondary compact"
                   >
                     ✕
                   </button>
