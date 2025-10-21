@@ -1,5 +1,5 @@
 # Mediteasy 🧘
-Bienvenue sur Mediteasy ! Une application mobile de méditation conçue pour accompagner votre pratique quotidienne. Construite avec React Native, Mediteasy offre la méditation guidée, des timers personnalisables et un suivi de pratique pour vous aider à maintenir une routine de méditation régulière.
+Bienvenue sur Mediteasy ! Une application mobile de méditation conçue pour accompagner votre pratique quotidienne. Construite avec Ionic, Mediteasy offre la méditation guidée, des timers personnalisables et un suivi de pratique pour vous aider à maintenir une routine de méditation régulière.
 
 ## À propos du projet
 - 🧘 Application de **méditation guidée** avec fonctionnalités personnalisables
@@ -22,9 +22,6 @@ Bienvenue sur Mediteasy ! Une application mobile de méditation conçue pour acc
 ## Stack technique 🛠️
 - **Framework** : Ionic
 - **Langage** : TypeScript 
-- **Gestion d'état** : React Context / Redux Toolkit
-- **Audio** : react-native-sound / react-native-track-player
-- **Stockage** : AsyncStorage 
 
 ## Installation 📦
 
@@ -39,7 +36,7 @@ Bienvenue sur Mediteasy ! Une application mobile de méditation conçue pour acc
 ### Étapes d'installation
 ```bash
 # Cloner le repository
-git clone https://github.com/votre-username/mediteasy.git
+git clone https://github.com/OlivierF47/mediteasy.git
 
 # Accéder au dossier
 cd mediteasy
@@ -60,13 +57,13 @@ npm run android
 ## Roadmap du projet 📋
 
 ### Phase 1 : Audio & Timer ⚡ En cours
-- [ ] Gestion du volume du gong
-- [ ] Système de playlist de sons
-- [ ] Paramétrage de la fréquence du gong
-- [ ] Playlist de sons de gong personnalisables
-- [ ] Sélecteur de durée de méditation (wheel picker)
-- [ ] Upload de sons personnalisés
-- [ ] Gestion du volume des sons de fond
+- [x] Gestion du volume du gong
+- [x] Système de playlist de sons
+- [x] Paramétrage de la fréquence du gong
+- [x] Playlist de sons de gong personnalisables
+- [x] Sélecteur de durée de méditation (wheel picker)
+- [x] Upload de sons personnalisés
+- [x] Gestion du volume des sons de fond
 
 ## Contribuer 🤝
 Les contributions sont les bienvenues ! Voici comment participer :
