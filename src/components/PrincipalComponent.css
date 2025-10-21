@@ -210,6 +210,11 @@ body::before {
   animation: fadeInUp 0.6s ease-out backwards;
 }
 
+.section.compact {
+  margin-bottom: var(--spacing-3);
+  padding-bottom: var(--spacing-3);
+}
+
 .section:nth-child(2) { animation-delay: 0.1s; }
 .section:nth-child(3) { animation-delay: 0.2s; }
 .section:nth-child(4) { animation-delay: 0.3s; }
@@ -231,6 +236,50 @@ body::before {
   padding-bottom: 0;
 }
 
+/* Layout compact avec icônes */
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+
+.control-icon {
+  font-size: 1.5rem;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+
+.volume-label {
+  min-width: 48px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--color-accent);
+  font-size: 0.95rem;
+}
+
+.checkbox-row {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.custom-duration {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+
 /* Buttons - plus tactiles et réactifs */
 .btn {
   padding: 16px 28px;
@@ -248,6 +297,11 @@ body::before {
   letter-spacing: 0.01em;
   touch-action: manipulation;
   user-select: none;
+}
+
+.btn.compact {
+  padding: 12px 20px;
+  font-size: 0.9rem;
 }
 
 .btn::before {
@@ -319,6 +373,14 @@ body::before {
   box-shadow: var(--shadow-inner);
 }
 
+.select.compact,
+.input.compact {
+  flex: 1;
+  margin-bottom: 0;
+  padding: 12px;
+  font-size: 0.95rem;
+}
+
 .select:focus,
 .input:focus {
   outline: none;
@@ -346,6 +408,11 @@ body::before {
   margin-bottom: var(--spacing-3);
   position: relative;
   cursor: pointer;
+}
+
+.range.compact {
+  flex: 1;
+  margin-bottom: 0;
 }
 
 .range::-webkit-slider-thumb {
@@ -398,8 +465,22 @@ body::before {
   transition: var(--transition-smooth);
 }
 
+.checkbox.compact {
+  flex: 1;
+  padding: 10px var(--spacing-2);
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  justify-content: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-outline);
+}
+
 .checkbox:hover {
   background: var(--color-bg);
+}
+
+.checkbox.compact:hover {
+  border-color: var(--color-accent-2);
 }
 
 .checkbox input[type="checkbox"] {
@@ -409,6 +490,11 @@ body::before {
   border-radius: 6px;
   border: 2px solid var(--color-outline);
   transition: var(--transition-smooth);
+}
+
+.checkbox.compact input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
 }
 
 .checkbox input[type="checkbox"]:checked {
