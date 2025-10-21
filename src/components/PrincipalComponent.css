@@ -113,15 +113,21 @@ body::before {
   50% { transform: scale(1.1) rotate(5deg); opacity: 0.7; }
 }
 
-/* Layout */
+/* Layout - OPTIMISÉ POUR MOBILE (sans marges) */
 .app {
   min-height: 100vh;
-  padding: var(--spacing-3);
+  min-height: 100dvh; /* Hauteur dynamique viewport - meilleure pour mobile */
+  padding: 0; /* Suppression du padding pour gagner de la place */
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   z-index: 1;
+  /* Gestion des safe areas (encoche, barre de navigation) */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .container {
@@ -511,20 +517,33 @@ body::before {
   50% { transform: scale(1.2); opacity: 0; }
 }
 
-/* Responsive - optimisé pour petits écrans */
+/* Responsive - OPTIMISÉ POUR MOBILE SANS MARGES */
 @media (max-width: 640px) {
   .app {
-    padding: var(--spacing-2);
+    padding: 0; /* Force le padding à 0 sur mobile */
+    /* Les safe-area-inset restent actifs */
   }
 
   .container {
-    padding: var(--spacing-3);
-    border-radius: var(--radius-md);
+    padding: var(--spacing-2) var(--spacing-3); /* Padding vertical réduit */
+    border-radius: 0; /* Suppression des coins arrondis pour utiliser tout l'écran */
     max-width: 100%;
+    box-shadow: none; /* Suppression de l'ombre */
+    border: none; /* Suppression des bordures */
+    min-height: 100dvh; /* Prend toute la hauteur */
+  }
+
+  .container::before {
+    height: 3px; /* Barre de couleur plus fine */
   }
 
   .title-main {
     font-size: 1.75rem;
+    margin-bottom: var(--spacing-3);
+  }
+
+  .title-section {
+    font-size: 1.15rem;
   }
 
   .time-display {
@@ -539,11 +558,17 @@ body::before {
     width: 100%;
     margin-right: 0;
     padding: 18px 24px;
+    font-size: 1.05rem;
   }
   
   .breath-button {
     width: 160px;
     height: 160px;
+  }
+
+  .section {
+    margin-bottom: var(--spacing-3);
+    padding-bottom: var(--spacing-3);
   }
 }
 
