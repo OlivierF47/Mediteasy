@@ -358,6 +358,32 @@ body::before {
 }
 
 /* Form Elements - design plus moderne */
+.trash-btn{
+
+  background-color: white;
+  position: relative;
+}
+.sup-custom{
+  height:50px;
+  width:50px;
+  margin-left: 15px;
+  top:15px;
+  background-color:white;
+  position: relative;
+}
+.select-1{
+  width:80%;
+   padding: 16px;
+  border: 2px solid var(--color-outline);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--text-default);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  margin-bottom: var(--spacing-3);
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-inner);
+}
 .select,
 .input {
   width: 100%;
@@ -689,4 +715,45 @@ body::before {
     --color-muted: #7DA6AD;
     --text-default: #E8F7F8;
   }
+}
+
+/* Container pour select + bouton poubelle */
+.select-1 {
+  flex: 1;
+  width: 100%;
+  padding: 16px;
+  border: 2px solid var(--color-outline);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--text-default);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  margin-bottom: 0;
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-inner);
+}
+
+/* Styles pour le bouton poubelle */
+.sup-custom {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 8px;
+  top:-3px;
+}
+
+.sup-custom:hover {
+  opacity: 0.7;
+  transform: scale(1.05);
+}
+
+.trash-btn {
+  width: 48px;
+  height: 48px;
+  display: block;
 }
