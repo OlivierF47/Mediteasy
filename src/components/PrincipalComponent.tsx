@@ -114,7 +114,7 @@ export default function MeditationTimer() {
   };
 
   // Ajouter un son personnalisé
- const addCustomSound = async () => {
+  const addCustomSound = async () => {
     try {
       const result = await FilePicker.pickFiles({
         types: ['audio/*'],
@@ -457,6 +457,14 @@ export default function MeditationTimer() {
           />
         )}
 
+        {/* Phase de préparation */}
+        {isPreparing && (
+          <div className="section">
+            <div className="time-display">{preparationTime}</div>
+            <div className="text-muted">🧘 Préparez-vous...</div>
+          </div>
+        )}
+
         {/* Affichage pendant la méditation ou en pause */}
         {(isPlaying || isPaused) && (
           <div className="section">
@@ -472,34 +480,25 @@ export default function MeditationTimer() {
           </div>
         )}
 
-        {/* Phase de préparation */}
-        {isPreparing && (
-          <div className="section">
-            <div className="time-display">{preparationTime}</div>
-            <div className="text-muted">🧘 Préparez-vous...</div>
-          </div>
-        )}
-
         {/* Configuration avant démarrage */}
-        {!isPlaying && !isPaused && !isFinished && (
+        {!isPlaying && !isPaused && !isFinished && !isPreparing && (
           <>
             {/* Son ambiant */}
-            <div className="section">
-              <h2 className="title-section">Son ambiant</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="section compact">
+              <div className="control-row">
+                <span className="control-icon">🎵</span>
                 <select
                   value={selectedSound}
                   onChange={(e) => {
                     const value = e.target.value;
                     if(value === "custom"){
                       e.target.value = selectedSound;
-                      
                       addCustomSound();
                     } else {
                       setSelectedSound(value);
                     }
                   }}
-                  className="select-1"
+                  className="select compact"
                 >
                   {soundOptions.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -507,27 +506,25 @@ export default function MeditationTimer() {
                     </option>
                   ))}
                   {customSounds.map((s) =>(
-                    <option key ={s.value} value={s.value}>
+                    <option key={s.value} value={s.value}>
                       {s.label}
-                      
                     </option>
                   ))}
-                  <option value="custom">⬇️ Ajouter un son personaliser</option>
+                  <option value="custom">⬇️ Ajouter un son personnalisé</option>
                 </select>
-                {selectedSoundOption?.isCustom &&(
-                  <button onClick={() =>{
-                    alert("Sur de supprimer ce son ?")
-                     removeCustomSound(selectedSound)}} className="sup-custom">
-                    <img src="./assets/images/trash.svg" alt="Supprimer" className='trash-btn' />
+                {selectedSoundOption?.isCustom && (
+                  <button 
+                    onClick={() => removeCustomSound(selectedSound)} 
+                    className="btn-delete"
+                    title="Supprimer ce son"
+                  >
+                    🗑️
                   </button>
-                )
-                }
+                )}
               </div>
-              {selectedSound !== 'silence' &&(
-                <div className="section">
-                  <label className="label">
-                    Volume ambiant: {Math.round(volume * 100)}%
-                  </label>
+
+              {selectedSound !== 'silence' && (
+                <div className="volume-control">
                   <input
                     type="range"
                     min="0"
@@ -673,7 +670,7 @@ export default function MeditationTimer() {
 
         {/* Boutons Démarrer / Pause / Reprendre / Stop */}
         <div className="section">
-          {!isPlaying && !isPaused && (
+          {!isPlaying && !isPaused && !isPreparing && (
             <button onClick={handlePlay} className="btn btn-primary">
               {isFinished ? '🔄 Recommencer' : '▶️ Démarrer'}
             </button>
