@@ -516,9 +516,9 @@ export default function MeditationTimer() {
                 </select>
                 {selectedSoundOption?.isCustom &&(
                   <button onClick={() =>{
-                 
+                    alert("Sur de supprimer ce son ?")
                      removeCustomSound(selectedSound)}} className="sup-custom">
-                    <img src="/assets/imges/trash.svg" alt="Supprimer" className='trash-btn' />
+                    <img src="./assets/images/trash.svg" alt="Supprimer" className='trash-btn' />
                   </button>
                 )
                 }
