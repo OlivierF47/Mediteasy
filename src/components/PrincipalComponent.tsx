@@ -493,6 +493,7 @@ export default function MeditationTimer() {
                     const value = e.target.value;
                     if(value === "custom"){
                       e.target.value = selectedSound;
+                      
                       addCustomSound();
                     } else {
                       setSelectedSound(value);
@@ -514,8 +515,10 @@ export default function MeditationTimer() {
                   <option value="custom">⬇️ Ajouter un son personaliser</option>
                 </select>
                 {selectedSoundOption?.isCustom &&(
-                  <button onClick={() => removeCustomSound(selectedSound)} className="sup-custom">
-                    <img src="/assets/images/trash.svg" alt="Supprimer" className='trash-btn' />
+                  <button onClick={() =>{
+                 
+                     removeCustomSound(selectedSound)}} className="sup-custom">
+                    <img src="/assets/imges/trash.svg" alt="Supprimer" className='trash-btn' />
                   </button>
                 )
                 }
