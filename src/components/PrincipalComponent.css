@@ -358,19 +358,7 @@ body::before {
 }
 
 /* Form Elements - design plus moderne */
-.trash-btn{
 
-  background-color: white;
-  position: relative;
-}
-.sup-custom{
-  height:50px;
-  width:50px;
-  margin-left: 15px;
-  top:15px;
-  background-color:white;
-  position: relative;
-}
 .select-1{
   width:80%;
    padding: 16px;
@@ -733,27 +721,42 @@ body::before {
   box-shadow: var(--shadow-inner);
 }
 
-/* Styles pour le bouton poubelle */
-.sup-custom {
-  background: transparent;
-  border: none;
+/* Styles pour le bouton de suppression */
+.btn-delete {
+  height: 52px; /* Même hauteur que l'input (padding 16px + bordure 2px * 2) */
+  min-width: 52px;
+  background: var(--color-surface); /* Même fond que l'app */
+  border: 2px solid var(--color-outline);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-smooth);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  margin-left: 8px;
-  top:-3px;
+  margin-left: var(--spacing-2);
+  padding: 0;
+  box-shadow: var(--shadow-inner);
 }
 
-.sup-custom:hover {
-  opacity: 0.7;
-  transform: scale(1.05);
+.btn-delete:hover {
+  border-color: var(--color-accent-2);
+  background: var(--color-bg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
 }
 
-.trash-btn {
-  width: 48px;
-  height: 48px;
-  display: block;
+.btn-delete:focus {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.btn-delete img {
+  width: 24px;
+  height: 24px;
+  filter: grayscale(20%);
+  transition: filter 0.3s ease;
+}
+
+.btn-delete:hover img {
+  filter: grayscale(0%);
 }

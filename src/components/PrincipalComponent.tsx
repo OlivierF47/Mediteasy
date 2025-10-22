@@ -518,7 +518,7 @@ export default function MeditationTimer() {
                     className="btn-delete"
                     title="Supprimer ce son"
                   >
-                    🗑️
+                    <img src="/assets/images/trash.svg" alt="Supprimer" />
                   </button>
                 )}
               </div>
