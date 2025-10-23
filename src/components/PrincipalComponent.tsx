@@ -23,6 +23,8 @@ const soundOptions: SoundOption[] = [
 const gongOptions = [
   { id: 'gong1', name: 'Gong Japonais', file: '/assets/gongs/studio_gong.wav' },
   { id: 'gong2', name: 'Gong Zen', file: '/assets/gongs/zen_gong.wav' },
+  { id: 'gong3', name: 'Bol Tibétain', file: '/assets/gongs/tibetian_bowl.mp3' },
+  { id: 'gong4', name: 'Bol en cristal', file: '/assets/gongs/crystal_bowl.mp3' },
 ];
 
 const intervalOptions = [
