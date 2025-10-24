@@ -450,7 +450,10 @@ export default function MeditationTimer() {
       <div className="container">
 
         {/* Titre principal */}
-        <h1 className="title-main">🧘 Mediteasy</h1>
+        <h1 className="title-main">
+          <img src="/mediteasy.svg" alt="logo Mediteasy" className="logo-icon" /> 
+          Mediteasy
+        </h1>
 
 
         {/* Fichiers audio cachés */}
