@@ -218,7 +218,36 @@ export default function MeditationTimer() {
   const selectedGongOption = gongOptions.find((g) => g.id === selectedGong);
 
   /* -------------------------
-    Effets pour ajuster les volumes
+    Prévisualisation des sons
+  -------------------------- */
+
+  useEffect(() => {
+    if (!isPlaying && !isPaused && selectedSound !== 'silence' && ambientAudioRef.current) {
+      ambientAudioRef.current.currentTime = 0;
+      ambientAudioRef.current.volume = volume;
+      ambientAudioRef.current.play().catch((err) => console.error('Erreur preview:', err));
+      
+      const previewTimer = setTimeout(() => {
+        if (ambientAudioRef.current) {
+          ambientAudioRef.current.pause();
+          ambientAudioRef.current.currentTime = 0;
+        }
+      }, 5000);
+      
+      return () => clearTimeout(previewTimer);
+    }
+  }, [selectedSound, isPlaying, isPaused]);
+
+  useEffect(() => {
+    if (!isPlaying && !isPaused && gongAudioRef.current) {
+      gongAudioRef.current.currentTime = 0;
+      gongAudioRef.current.volume = gongVolume;
+      gongAudioRef.current.play().catch((err) => console.error('Erreur preview gong:', err));
+    }
+  }, [selectedGong, isPlaying, isPaused]);
+
+  /* -------------------------
+    Effets pour ajuster les volumes en temps réel
   -------------------------- */
 
   useEffect(() => {
@@ -431,17 +460,6 @@ export default function MeditationTimer() {
   };
 
   /* -------------------------
-    Test son du gong
-  -------------------------- */
-
-  const handleTestGong = () => {
-    if (gongAudioRef.current) {
-      gongAudioRef.current.currentTime = 0;
-      gongAudioRef.current.play().catch((err) => console.error('Erreur test gong:', err));
-    }
-  };
-
-  /* -------------------------
     Interface utilisateur (UI)
   -------------------------- */
 
@@ -623,10 +641,6 @@ export default function MeditationTimer() {
                   🔔 Fin
                 </label>
               </div>
-
-              <button onClick={handleTestGong} className="btn btn-secondary compact">
-                🔊 Tester
-              </button>
             </div>
 
             {/* Durée de méditation */}
