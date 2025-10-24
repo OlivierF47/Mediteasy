@@ -174,6 +174,15 @@ export default function MeditationTimer() {
       const soundToRemove = customSounds.find(sound => sound.value === soundId);
       if (!soundToRemove) return;
 
+      // Demander confirmation avant suppression
+      const confirmDelete = window.confirm(
+        `Êtes-vous sûr de vouloir supprimer le son "${soundToRemove.label.replace('🎵 ', '')}" ?\n\nCette action est irréversible.`
+      );
+      
+      if (!confirmDelete) {
+        return; 
+      }
+
       // Supprimer le fichier audio du système de fichiers
       if (soundToRemove.file) {
         try {
