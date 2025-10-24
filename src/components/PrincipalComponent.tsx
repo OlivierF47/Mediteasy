@@ -18,6 +18,9 @@ const soundOptions: SoundOption[] = [
   { value: 'silence', label: '🔇 Silence' },
   { value: 'rain', label: '🌧️ Pluie', file: '/assets/ambients/rain.mp3' },
   { value: 'ocean', label: '🌊 Ocean', file: '/assets/ambients/ocean.mp3' },
+  { value: 'birds', label: '🐦 Oiseaux', file: '/assets/ambients/birds.mp3' },
+  { value: 'calm_mind', label: '🧠 Esprit Calme', file: '/assets/ambients/calm_mind.mp3' },
+  { value: 'travel_flute', label: '🎋 Flûte Voyage', file: '/assets/ambients/travel_flute.mp3' },
 ];
 
 const gongOptions = [
@@ -206,36 +209,7 @@ export default function MeditationTimer() {
   const selectedGongOption = gongOptions.find((g) => g.id === selectedGong);
 
   /* -------------------------
-    Prévisualisation des sons
-  -------------------------- */
-
-  useEffect(() => {
-    if (!isPlaying && !isPaused && selectedSound !== 'silence' && ambientAudioRef.current) {
-      ambientAudioRef.current.currentTime = 0;
-      ambientAudioRef.current.volume = volume;
-      ambientAudioRef.current.play().catch((err) => console.error('Erreur preview:', err));
-      
-      const previewTimer = setTimeout(() => {
-        if (ambientAudioRef.current) {
-          ambientAudioRef.current.pause();
-          ambientAudioRef.current.currentTime = 0;
-        }
-      }, 5000);
-      
-      return () => clearTimeout(previewTimer);
-    }
-  }, [selectedSound, isPlaying, isPaused]);
-
-  useEffect(() => {
-    if (!isPlaying && !isPaused && gongAudioRef.current) {
-      gongAudioRef.current.currentTime = 0;
-      gongAudioRef.current.volume = gongVolume;
-      gongAudioRef.current.play().catch((err) => console.error('Erreur preview gong:', err));
-    }
-  }, [selectedGong, isPlaying, isPaused]);
-
-  /* -------------------------
-    Effets pour ajuster les volumes en temps réel
+    Effets pour ajuster les volumes
   -------------------------- */
 
   useEffect(() => {
@@ -448,6 +422,17 @@ export default function MeditationTimer() {
   };
 
   /* -------------------------
+    Test son du gong
+  -------------------------- */
+
+  const handleTestGong = () => {
+    if (gongAudioRef.current) {
+      gongAudioRef.current.currentTime = 0;
+      gongAudioRef.current.play().catch((err) => console.error('Erreur test gong:', err));
+    }
+  };
+
+  /* -------------------------
     Interface utilisateur (UI)
   -------------------------- */
 
@@ -518,7 +503,7 @@ export default function MeditationTimer() {
                       setSelectedSound(value);
                     }
                   }}
-                  className="select compact"
+                  className="select compact" 
                 >
                   {soundOptions.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -626,6 +611,10 @@ export default function MeditationTimer() {
                   🔔 Fin
                 </label>
               </div>
+
+              <button onClick={handleTestGong} className="btn btn-secondary compact">
+                🔊 Tester
+              </button>
             </div>
 
             {/* Durée de méditation */}
