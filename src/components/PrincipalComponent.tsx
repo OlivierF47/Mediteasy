@@ -221,86 +221,42 @@ export default function MeditationTimer() {
     Prévisualisation des sons
   -------------------------- */
 
-  useEffect(() => {
-    if (!isPlaying && !isPaused && selectedSound !== 'silence' && ambientAudioRef.current) {
-      ambientAudioRef.current.currentTime = 0;
-      ambientAudioRef.current.volume = volume;
-      ambientAudioRef.current.play().catch((err) => console.error('Erreur preview:', err));
-      
-      const previewTimer = setTimeout(() => {
-        if (ambientAudioRef.current) {
-          ambientAudioRef.current.pause();
-          ambientAudioRef.current.currentTime = 0;
-        }
-      }, 5000);
-      
-      return () => clearTimeout(previewTimer);
-    }
-  }, [selectedSound, isPlaying, isPaused]);
-
-  useEffect(() => {
-    if (!isPlaying && !isPaused && gongAudioRef.current) {
-      gongAudioRef.current.currentTime = 0;
-      gongAudioRef.current.volume = gongVolume;
-      gongAudioRef.current.play().catch((err) => console.error('Erreur preview gong:', err));
-    }
-  }, [selectedGong, isPlaying, isPaused]);
+  const playPreview = (audioRef: React.RefObject<HTMLAudioElement | null>) => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = 0;
+    audioRef.current.play();
+    setTimeout(() => audioRef.current?.pause(), 2000);
+  };
 
   /* -------------------------
-    Effets pour ajuster les volumes en temps réel
+    Logique du timer
   -------------------------- */
 
-  useEffect(() => {
-    if (ambientAudioRef.current) {
-      ambientAudioRef.current.volume = volume;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    if (gongAudioRef.current) {
-      gongAudioRef.current.volume = gongVolume;
-    }
-  }, [gongVolume]);
-
-  /* -------------------------
-    Fonction pour jouer le gong
-  -------------------------- */
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   const playGong = () => {
     if (gongAudioRef.current) {
       gongAudioRef.current.currentTime = 0;
-      gongAudioRef.current.play().catch((err) => console.error('Erreur gong:', err));
+      gongAudioRef.current.volume = gongVolume;
+      gongAudioRef.current.play();
     }
   };
 
-  /* -------------------------
-    Formatage du temps
-  -------------------------- */
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  /* -------------------------
-    Lancer la méditation
-  -------------------------- */
-
   const handlePlay = () => {
-    // Démarrer la phase de préparation
+    setIsFinished(false);
     setIsPreparing(true);
-    setPreparationTime(10); // 10 secondes de préparation
+    setPreparationTime(3);
 
-    let prepTime = 10;
+    let countdown = 3;
     preparationTimerRef.current = setInterval(() => {
-      prepTime--;
-      setPreparationTime(prepTime);
-
-      if (prepTime <= 0) {
-        if (preparationTimerRef.current) {
-          clearInterval(preparationTimerRef.current);
-        }
+      countdown--;
+      setPreparationTime(countdown);
+      if (countdown === 0) {
+        clearInterval(preparationTimerRef.current!);
         setIsPreparing(false);
         startMeditation();
       }
@@ -309,144 +265,111 @@ export default function MeditationTimer() {
 
   const startMeditation = () => {
     setIsPlaying(true);
-    setIsPaused(false);
-    setIsFinished(false);
-    const totalSeconds = duration * 60;
-    setTimeRemaining(totalSeconds);
+    setTimeRemaining(duration * 60);
     setNextGongIn(gongInterval > 0 ? gongInterval * 60 : 0);
 
-    // Gong de début (si activé)
     if (gongMoments.start) {
-      setTimeout(() => playGong(), 500);
+      playGong();
     }
 
-    // Lecture du son ambiant
     if (selectedSound !== 'silence' && ambientAudioRef.current) {
-      ambientAudioRef.current.currentTime = 0;
       ambientAudioRef.current.volume = volume;
-      ambientAudioRef.current.play().catch((err) => console.error('Erreur audio:', err));
-    }
-
-    // Timer principal (compte à rebours)
-    let remaining = totalSeconds;
-    timerRef.current = setInterval(() => {
-      remaining--;
-      setTimeRemaining(remaining);
-
-      // Fin du timer
-      if (remaining <= 0) {
-        handleStop();
-        setIsFinished(true);
-        // Gong de fin si activé
-        if (gongMoments.end) {
-          playGong();
-        }
-      }
-    }, 1000);
-
-    // Timer des gongs (intervalles réguliers)
-    if (gongInterval > 0) {
-      let nextGong = gongInterval * 60;
-      setNextGongIn(nextGong);
-      
-      gongTimerRef.current = setInterval(() => {
-        nextGong--;
-        setNextGongIn(nextGong);
-        
-        if (nextGong <= 0 && remaining > 0) {
-          playGong();
-          nextGong = gongInterval * 60;
-          setNextGongIn(nextGong);
-        }
-      }, 1000);
-    }
-  };
-
-  /* -------------------------
-    Pause de la méditation
-  -------------------------- */
-
-  const handlePause = () => {
-    setIsPlaying(false);
-    setIsPaused(true);
-
-    if (ambientAudioRef.current) {
-      ambientAudioRef.current.pause();
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    if (gongTimerRef.current) {
-      clearInterval(gongTimerRef.current);
-    }
-  };
-
-  /* -------------------------
-    Reprise de la méditation
-  -------------------------- */
-
-  const handleResume = () => {
-    setIsPlaying(true);
-    setIsPaused(false);
-
-    if (ambientAudioRef.current) {
       ambientAudioRef.current.play();
     }
 
-    // Relancer le timer principal avec le temps restant
-    let remaining = timeRemaining;
     timerRef.current = setInterval(() => {
-      remaining--;
-      setTimeRemaining(remaining);
-
-      if (remaining <= 0) {
-        handleStop();
-        setIsFinished(true);
-        if (gongMoments.end) {
-          playGong();
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          handleEnd();
+          return 0;
         }
-      }
+        return prev - 1;
+      });
     }, 1000);
 
-    // Relancer le timer des gongs si nécessaire
     if (gongInterval > 0) {
-      let nextGong = nextGongIn;
       gongTimerRef.current = setInterval(() => {
-        nextGong--;
-        setNextGongIn(nextGong);
-
-        if (nextGong <= 0 && remaining > 0) {
-          playGong();
-          nextGong = gongInterval * 60;
-          setNextGongIn(nextGong);
-        }
+        setNextGongIn((prev) => {
+          if (prev <= 1) {
+            playGong();
+            return gongInterval * 60;
+          }
+          return prev - 1;
+        });
       }, 1000);
     }
   };
 
-  /* -------------------------
-    Arrêt de la méditation
-  -------------------------- */
+  const handlePause = () => {
+    setIsPaused(true);
+    setIsPlaying(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (gongTimerRef.current) clearInterval(gongTimerRef.current);
+    if (ambientAudioRef.current) ambientAudioRef.current.pause();
+  };
+
+  const handleResume = () => {
+    setIsPaused(false);
+    setIsPlaying(true);
+
+    if (selectedSound !== 'silence' && ambientAudioRef.current) {
+      ambientAudioRef.current.play();
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          handleEnd();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    if (gongInterval > 0) {
+      gongTimerRef.current = setInterval(() => {
+        setNextGongIn((prev) => {
+          if (prev <= 1) {
+            playGong();
+            return gongInterval * 60;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+  };
 
   const handleStop = () => {
     setIsPlaying(false);
     setIsPaused(false);
+    setTimeRemaining(0);
+    setNextGongIn(0);
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (gongTimerRef.current) clearInterval(gongTimerRef.current);
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.pause();
+      ambientAudioRef.current.currentTime = 0;
+    }
+  };
+
+  const handleEnd = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (gongTimerRef.current) clearInterval(gongTimerRef.current);
+
+    if (gongMoments.end) {
+      playGong();
+    }
 
     if (ambientAudioRef.current) {
       ambientAudioRef.current.pause();
       ambientAudioRef.current.currentTime = 0;
     }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    if (gongTimerRef.current) {
-      clearInterval(gongTimerRef.current);
-    }
-    setTimeRemaining(0);
-    setNextGongIn(0);
+
+    setIsPlaying(false);
+    setIsFinished(true);
   };
 
-  /* -------------------------
+  /* --------------------------
     Gestion de la durée personnalisée
   -------------------------- */
 
@@ -467,11 +390,10 @@ export default function MeditationTimer() {
     <div className="app">
       <div className="container">
 
-        {/* Titre principal */}
-        <h1 className="title-main">
-          <img src="/mediteasy.svg" alt="logo Mediteasy" className="logo-icon" /> 
-          Mediteasy
-        </h1>
+        {/* Logo uniquement */}
+        <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-4)' }}>
+          <img src="/mediteasy.svg" alt="logo Mediteasy" style={{ height: '190px', width: 'auto' }} /> 
+        </div>
 
 
         {/* Fichiers audio cachés */}
