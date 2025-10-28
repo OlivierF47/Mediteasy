@@ -496,7 +496,7 @@ export default function MeditationTimer() {
       <div className="container">
 
         {/* Logo uniquement */}
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <img src="/mediteasy.svg" alt="logo Mediteasy" style={{ height: '190px', width: 'auto' }} /> 
         </div>
 
