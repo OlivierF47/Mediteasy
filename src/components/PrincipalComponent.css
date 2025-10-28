@@ -733,3 +733,8 @@ body::before {
     transition-duration: 0.01ms !important;
   }
 }
+/* Select de durée plus court pour laisser place au bouton Personnaliser */
+.duration-select {
+  flex: 0 1 auto;
+  max-width: 120px;
+}
