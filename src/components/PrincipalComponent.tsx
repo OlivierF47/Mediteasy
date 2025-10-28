@@ -78,9 +78,12 @@ export default function MeditationTimer() {
 
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
   const gongAudioRef = useRef<HTMLAudioElement | null>(null);
+  const previewAmbientRef = useRef<HTMLAudioElement | null>(null);
+  const previewGongRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const gongTimerRef = useRef<NodeJS.Timeout | null>(null);
   const preparationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const previewAmbientTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /* -------------------------
     Sélections actuelles
@@ -218,15 +221,107 @@ export default function MeditationTimer() {
   const selectedGongOption = gongOptions.find((g) => g.id === selectedGong);
 
   /* -------------------------
-    Prévisualisation des sons
+    Prévisualisation des sons avec lecture automatique
   -------------------------- */
 
-  const playPreview = (audioRef: React.RefObject<HTMLAudioElement | null>) => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = 0;
-    audioRef.current.play();
-    setTimeout(() => audioRef.current?.pause(), 2000);
-  };
+  // Prévisualisation automatique du son ambiant lors du changement (sans le volume dans les dépendances)
+  useEffect(() => {
+    // Ne pas prévisualiser si on est en train de méditer
+    if (isPlaying || isPaused) return;
+    
+    // Arrêter toute prévisualisation en cours
+    if (previewAmbientRef.current) {
+      previewAmbientRef.current.pause();
+      previewAmbientRef.current = null;
+    }
+
+    // Nettoyer l'ancien timeout
+    if (previewAmbientTimeoutRef.current) {
+      clearTimeout(previewAmbientTimeoutRef.current);
+      previewAmbientTimeoutRef.current = null;
+    }
+
+    // Trouver le fichier du son sélectionné
+    const soundOption = allSounds.find(s => s.value === selectedSound);
+    
+    // Ne pas prévisualiser le silence
+    if (selectedSound === 'silence' || !soundOption?.file) return;
+
+    // Créer et jouer le nouveau son en prévisualisation
+    const audio = new Audio(soundOption.file);
+    audio.volume = volume;
+    audio.loop = false;
+    previewAmbientRef.current = audio;
+    
+    audio.play().catch(err => {
+      console.error('Erreur lors de la lecture de la prévisualisation:', err);
+    });
+
+    // Arrêter la prévisualisation après 3 secondes
+    previewAmbientTimeoutRef.current = setTimeout(() => {
+      if (previewAmbientRef.current) {
+        previewAmbientRef.current.pause();
+        previewAmbientRef.current = null;
+      }
+    }, 5000);
+
+    // Cleanup
+    return () => {
+      if (previewAmbientTimeoutRef.current) {
+        clearTimeout(previewAmbientTimeoutRef.current);
+        previewAmbientTimeoutRef.current = null;
+      }
+      if (previewAmbientRef.current) {
+        previewAmbientRef.current.pause();
+        previewAmbientRef.current = null;
+      }
+    };
+  }, [selectedSound, isPlaying, isPaused]); // Pas de 'volume' ni 'selectedSoundOption' dans les dépendances
+
+  // Prévisualisation automatique du gong lors du changement (sans le volume dans les dépendances)
+  useEffect(() => {
+    // Ne pas prévisualiser si on est en train de méditer
+    if (isPlaying || isPaused) return;
+    
+    // Arrêter toute prévisualisation en cours
+    if (previewGongRef.current) {
+      previewGongRef.current.pause();
+      previewGongRef.current = null;
+    }
+
+    if (!selectedGongOption?.file) return;
+
+    // Créer et jouer le nouveau gong en prévisualisation
+    const audio = new Audio(selectedGongOption.file);
+    audio.volume = gongVolume;
+    previewGongRef.current = audio;
+    
+    audio.play().catch(err => {
+      console.error('Erreur lors de la lecture de la prévisualisation du gong:', err);
+    });
+
+    // Cleanup
+    return () => {
+      if (previewGongRef.current) {
+        previewGongRef.current.pause();
+        previewGongRef.current = null;
+      }
+    };
+  }, [selectedGong, isPlaying, isPaused]); // Pas de 'gongVolume' dans les dépendances
+
+  // Ajustement du volume en temps réel pour la prévisualisation du son ambiant
+  useEffect(() => {
+    if (previewAmbientRef.current) {
+      previewAmbientRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  // Ajustement du volume en temps réel pour la prévisualisation du gong
+  useEffect(() => {
+    if (previewGongRef.current) {
+      previewGongRef.current.volume = gongVolume;
+    }
+  }, [gongVolume]);
 
   /* -------------------------
     Logique du timer
@@ -247,6 +342,16 @@ export default function MeditationTimer() {
   };
 
   const handlePlay = () => {
+    // Arrêter toutes les prévisualisations
+    if (previewAmbientRef.current) {
+      previewAmbientRef.current.pause();
+      previewAmbientRef.current = null;
+    }
+    if (previewGongRef.current) {
+      previewGongRef.current.pause();
+      previewGongRef.current = null;
+    }
+
     setIsFinished(false);
     setIsPreparing(true);
     setPreparationTime(3);
@@ -391,7 +496,7 @@ export default function MeditationTimer() {
       <div className="container">
 
         {/* Logo uniquement */}
-        <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-4)' }}>
+        <div style={{ textAlign: 'center' }}>
           <img src="/mediteasy.svg" alt="logo Mediteasy" style={{ height: '190px', width: 'auto' }} /> 
         </div>
 
