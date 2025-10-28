@@ -19,8 +19,6 @@ const soundOptions: SoundOption[] = [
   { value: 'rain', label: '🌧️ Pluie', file: '/assets/ambients/rain.mp3' },
   { value: 'ocean', label: '🌊 Ocean', file: '/assets/ambients/ocean.mp3' },
   { value: 'birds', label: '🐦 Oiseaux', file: '/assets/ambients/birds.mp3' },
-  { value: 'calm_mind', label: '🧠 Esprit Calme', file: '/assets/ambients/calm_mind.mp3' },
-  { value: 'travel_flute', label: '🎋 Flûte Voyage', file: '/assets/ambients/travel_flute.mp3' },
 ];
 
 const gongOptions = [
