@@ -233,6 +233,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .volume-control {
@@ -397,6 +398,19 @@ body::before {
 .select.compact {
   padding: 12px;
   font-size: 0.95rem;
+  margin-bottom: 0;
+}
+
+/* Supprimer le margin des inputs/selects dans les control-row */
+.control-row .input,
+.control-row .select {
+  margin-bottom: 0;
+}
+
+/* Supprimer le margin des boutons dans les control-row */
+.control-row .btn {
+  margin-bottom: 0;
+  margin-right: 0;
 }
 
 .input:focus,
@@ -640,8 +654,8 @@ body::before {
 
 /* Bouton de suppression */
 .btn-delete {
-  height: 50px;
-  min-width: 50px;
+  height: 52px;
+  min-width: 52px;
   background: var(--color-surface);
   border: 2px solid var(--color-outline);
   border-radius: var(--radius-md);
@@ -650,9 +664,11 @@ body::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
   margin-left: var(--spacing-2);
   padding: 0;
   box-shadow: var(--shadow-inner);
+  flex-shrink: 0;
 }
 
 .btn-delete:hover {
