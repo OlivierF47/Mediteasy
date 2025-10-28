@@ -121,25 +121,66 @@ export default function MeditationTimer() {
   // Ajouter un son personnalisé
   const addCustomSound = async () => {
     try {
+      console.log('🎵 Début addCustomSound');
+      
       const result = await FilePicker.pickFiles({
         types: ['audio/*'],
         readData: true,
       });
 
-      if (!result.files[0]) {
-        console.log('Aucun fichier sélectionné');
+      console.log('📁 Résultat FilePicker:', result);
+
+      if (!result.files || result.files.length === 0) {
+        console.log('❌ Aucun fichier sélectionné');
         return;
       }
 
       const file = result.files[0];
+      console.log('📄 Fichier:', file);
+      
       const soundId = `custom_${Date.now()}`;
       const fileName = `${soundId}.${file.name.split('.').pop()}`;
       const soundName = file.name.replace(/\.[^/.]+$/, ""); // Nom sans extension
 
-      // Sauvegarder le fichier dans le système de fichiers
+      console.log('💾 Préparation sauvegarde:', fileName);
+
+      // Stratégie différente selon la plateforme
+      let fileData: string;
+      
+      if (file.data) {
+        // Web ou données base64 disponibles
+        console.log('📄 Utilisation des données base64');
+        fileData = file.data;
+      } else if (file.path) {
+        // Android - lire depuis le path
+        console.log('📁 Lecture depuis path:', file.path);
+        const sourceFile = await Filesystem.readFile({
+          path: file.path
+        });
+        fileData = typeof sourceFile.data === 'string' ? sourceFile.data : '';
+        if (!fileData) {
+          console.error('❌ Impossible de convertir les données en string');
+          alert('Erreur de format de fichier');
+          return;
+        }
+      } else {
+        console.error('❌ Aucune donnée disponible');
+        alert('Impossible de lire le fichier audio');
+        return;
+      }
+
+      // Sauvegarder le fichier
       await Filesystem.writeFile({
         path: `audio/${fileName}`,
-        data: file.data ?? '',
+        data: fileData,
+        directory: Directory.Data,
+      });
+
+      console.log('✅ Fichier sauvegardé');
+
+      // Obtenir l'URI pour la lecture
+      const fileUri = await Filesystem.getUri({
+        path: `audio/${fileName}`,
         directory: Directory.Data,
       });
 
@@ -147,7 +188,7 @@ export default function MeditationTimer() {
       const newCustomSound: SoundOption = {
         value: soundId,
         label: `🎵 ${soundName}`,
-        file: `audio/${fileName}`,
+        file: fileUri.uri, // Utiliser l'URI complet
         isCustom: true
       };
 
