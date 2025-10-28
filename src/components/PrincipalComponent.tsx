@@ -685,44 +685,42 @@ export default function MeditationTimer() {
                     </option>
                   ))}
                 </select>
-                {!showCustomInput && (
+                {!showCustomInput ? (
                   <button
                     onClick={() => setShowCustomInput(true)}
                     className="btn btn-secondary compact"
                   >
                     ➕ Personnaliser
                   </button>
+                ) : (
+                  <>
+                    <input
+                      type="number"
+                      value={customMinutes}
+                      onChange={(e) => setCustomMinutes(e.target.value)}
+                      placeholder="1-180"
+                      min="1"
+                      max="180"
+                      className="input compact custom-duration-input"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') handleAddCustomDuration();
+                      }}
+                    />
+                    <button onClick={handleAddCustomDuration} className="btn btn-primary compact custom-btn">
+                      ✓
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCustomInput(false);
+                        setCustomMinutes('');
+                      }}
+                      className="btn btn-secondary compact custom-btn"
+                    >
+                      ✕
+                    </button>
+                  </>
                 )}
               </div>
-
-              {showCustomInput && (
-                <div className="custom-duration">
-                  <input
-                    type="number"
-                    value={customMinutes}
-                    onChange={(e) => setCustomMinutes(e.target.value)}
-                    placeholder="1-180"
-                    min="1"
-                    max="180"
-                    className="input compact"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') handleAddCustomDuration();
-                    }}
-                  />
-                  <button onClick={handleAddCustomDuration} className="btn btn-primary compact">
-                    ✓
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowCustomInput(false);
-                      setCustomMinutes('');
-                    }}
-                    className="btn btn-secondary compact"
-                  >
-                    ✕
-                  </button>
-                </div>
-              )}
             </div>
           </>
         )}
