@@ -184,15 +184,14 @@ body::before {
 
 /* Sections */
 .section {
-  margin-bottom: var(--spacing-4);
-  padding-bottom: var(--spacing-4);
-  border-bottom: 1px solid var(--color-outline);
+  margin-bottom: var(--spacing-2);
+  padding-bottom: var(--spacing-2);
   animation: fadeInUp 0.5s ease-out backwards;
 }
 
 .section.compact {
-  margin-bottom: var(--spacing-3);
-  padding-bottom: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+  padding-bottom: var(--spacing-2);
 }
 
 .section:nth-child(2) { animation-delay: 0.05s; }
@@ -211,7 +210,6 @@ body::before {
 }
 
 .section:last-child {
-  border-bottom: none;
   margin-bottom: 0;
   padding-bottom: 0;
 }
