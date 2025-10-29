@@ -222,11 +222,8 @@ export default function MeditationTimer() {
     Prévisualisation des sons avec lecture automatique
   -------------------------- */
 
-  // Prévisualisation automatique du son ambiant lors du changement (sans le volume dans les dépendances)
-  useEffect(() => {
-    // Ne pas prévisualiser si on est en train de méditer
-    if (isPlaying || isPaused) return;
-    
+  // Fonction pour prévisualiser un son ambiant
+  const previewAmbientSound = (soundValue: string) => {
     // Arrêter toute prévisualisation en cours
     if (previewAmbientRef.current) {
       previewAmbientRef.current.pause();
@@ -240,10 +237,10 @@ export default function MeditationTimer() {
     }
 
     // Trouver le fichier du son sélectionné
-    const soundOption = allSounds.find(s => s.value === selectedSound);
+    const soundOption = allSounds.find(s => s.value === soundValue);
     
     // Ne pas prévisualiser le silence
-    if (selectedSound === 'silence' || !soundOption?.file) return;
+    if (soundValue === 'silence' || !soundOption?.file) return;
 
     // Créer et jouer le nouveau son en prévisualisation
     const audio = new Audio(soundOption.file);
@@ -262,50 +259,43 @@ export default function MeditationTimer() {
         previewAmbientRef.current = null;
       }
     }, 3000);
+  };
 
-    // Cleanup
-    return () => {
-      if (previewAmbientTimeoutRef.current) {
-        clearTimeout(previewAmbientTimeoutRef.current);
-        previewAmbientTimeoutRef.current = null;
-      }
-      if (previewAmbientRef.current) {
-        previewAmbientRef.current.pause();
-        previewAmbientRef.current = null;
-      }
-    };
-  }, [selectedSound, isPlaying, isPaused]); // Pas de 'volume' ni 'selectedSoundOption' dans les dépendances
-
-  // Prévisualisation automatique du gong lors du changement (sans le volume dans les dépendances)
-  useEffect(() => {
-    // Ne pas prévisualiser si on est en train de méditer
-    if (isPlaying || isPaused) return;
-    
+  // Fonction pour prévisualiser un gong
+  const previewGong = (gongId: string) => {
     // Arrêter toute prévisualisation en cours
     if (previewGongRef.current) {
       previewGongRef.current.pause();
       previewGongRef.current = null;
     }
 
-    if (!selectedGongOption?.file) return;
+    const gongOption = gongOptions.find((g) => g.id === gongId);
+    if (!gongOption?.file) return;
 
     // Créer et jouer le nouveau gong en prévisualisation
-    const audio = new Audio(selectedGongOption.file);
+    const audio = new Audio(gongOption.file);
     audio.volume = gongVolume;
     previewGongRef.current = audio;
     
     audio.play().catch(err => {
       console.error('Erreur lors de la lecture de la prévisualisation du gong:', err);
     });
+  };
 
-    // Cleanup
+  // Cleanup des prévisualisations au démontage du composant
+  useEffect(() => {
     return () => {
+      if (previewAmbientTimeoutRef.current) {
+        clearTimeout(previewAmbientTimeoutRef.current);
+      }
+      if (previewAmbientRef.current) {
+        previewAmbientRef.current.pause();
+      }
       if (previewGongRef.current) {
         previewGongRef.current.pause();
-        previewGongRef.current = null;
       }
     };
-  }, [selectedGong, isPlaying, isPaused]); // Pas de 'gongVolume' dans les dépendances
+  }, []);
 
   // Ajustement du volume en temps réel pour la prévisualisation du son ambiant
   useEffect(() => {
@@ -352,9 +342,9 @@ export default function MeditationTimer() {
 
     setIsFinished(false);
     setIsPreparing(true);
-    setPreparationTime(3);
+    setPreparationTime(10);
 
-    let countdown = 3;
+    let countdown = 10;
     preparationTimerRef.current = setInterval(() => {
       countdown--;
       setPreparationTime(countdown);
@@ -494,7 +484,7 @@ export default function MeditationTimer() {
       <div className="container">
 
         {/* Logo uniquement */}
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '17px' }}>
           <img src="/mediteasy.svg" alt="logo Mediteasy" style={{ height: '190px', width: 'auto' }} /> 
         </div>
 
@@ -556,6 +546,10 @@ export default function MeditationTimer() {
                       addCustomSound();
                     } else {
                       setSelectedSound(value);
+                      // Prévisualiser le son seulement si on n'est pas en train de méditer
+                      if (!isPlaying && !isPaused && !isPreparing) {
+                        previewAmbientSound(value);
+                      }
                     }
                   }}
                   className="select compact" 
@@ -605,7 +599,14 @@ export default function MeditationTimer() {
                 <span className="control-icon">🔔</span>
                 <select
                   value={selectedGong}
-                  onChange={(e) => setSelectedGong(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedGong(value);
+                    // Prévisualiser le gong seulement si on n'est pas en train de méditer
+                    if (!isPlaying && !isPaused && !isPreparing) {
+                      previewGong(value);
+                    }
+                  }}
                   className="select compact"
                 >
                   {gongOptions.map((g) => (
@@ -672,24 +673,26 @@ export default function MeditationTimer() {
             <div className="section compact">
               <div className="control-row">
                 <span className="control-icon">⏳</span>
-                <select
-                  value={duration}
-                  onChange={(e) => setDuration(parseInt(e.target.value))}
-                  className="select compact duration-select"
-                >
-                  {durationOptions.map((d) => (
-                    <option key={d.value} value={d.value}>
-                      {d.label}
-                    </option>
-                  ))}
-                </select>
                 {!showCustomInput ? (
-                  <button
-                    onClick={() => setShowCustomInput(true)}
-                    className="btn btn-secondary compact"
-                  >
-                    ➕ Personnaliser
-                  </button>
+                  <>
+                    <select
+                      value={duration}
+                      onChange={(e) => setDuration(parseInt(e.target.value))}
+                      className="select compact duration-select"
+                    >
+                      {durationOptions.map((d) => (
+                        <option key={d.value} value={d.value}>
+                          {d.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => setShowCustomInput(true)}
+                      className="btn btn-secondary compact"
+                    >
+                      ➕ Personnaliser
+                    </button>
+                  </>
                 ) : (
                   <>
                     <input
