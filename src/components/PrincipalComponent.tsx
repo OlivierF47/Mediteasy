@@ -11,32 +11,33 @@ interface SoundOption {
 }
 
 /* --------------------------------------------
-  Données statiques : sons, gongs, intervalles, durées
+  Static data: sounds, gongs, intervals, durations
 -------------------------------------------- */
 
 const soundOptions: SoundOption[] = [
   { value: 'silence', label: '🔇 Silence' },
-  { value: 'rain', label: '🌧️ Pluie', file: '/assets/ambients/rain.mp3' },
+  { value: 'rain', label: '🌧️ Rain', file: '/assets/ambients/rain.mp3' },
   { value: 'ocean', label: '🌊 Ocean', file: '/assets/ambients/ocean.mp3' },
-  { value: 'birds', label: '🐦 Oiseaux', file: '/assets/ambients/birds.mp3' },
+  { value: 'birds', label: '🐦 Birds', file: '/assets/ambients/birds.mp3' },
 ];
 
 const gongOptions = [
-  { id: 'gong1', name: 'Gong Japonais', file: '/assets/gongs/studio_gong.wav' },
-  { id: 'gong2', name: 'Gong Zen', file: '/assets/gongs/zen_gong.wav' },
-  { id: 'gong3', name: 'Bol Tibétain', file: '/assets/gongs/tibetian_bowl.mp3' },
-  { id: 'gong4', name: 'Bol en cristal', file: '/assets/gongs/crystal_bowl.mp3' },
+  { id: 'gong1', name: 'Japanese Gong', file: '/assets/gongs/studio_gong.wav' },
+  { id: 'gong2', name: 'Zen Gong', file: '/assets/gongs/zen_gong.wav' },
+  { id: 'gong3', name: 'Tibetan Bowl', file: '/assets/gongs/tibetian_bowl.mp3' },
+  { id: 'gong4', name: 'Crystal Bowl', file: '/assets/gongs/crystal_bowl.mp3' },
 ];
 
 const intervalOptions = [
-  { value: 0, label: 'Aucun' },
-  { value: 5, label: 'Toutes les 5 min' },
-  { value: 10, label: 'Toutes les 10 min' },
-  { value: 15, label: 'Toutes les 15 min' },
-  { value: 30, label: 'Toutes les 30 min' },
+  { value: 0, label: 'None' },
+  { value: 5, label: 'Every 5 min' },
+  { value: 10, label: 'Every 10 min' },
+  { value: 15, label: 'Every 15 min' },
+  { value: 30, label: 'Every 30 min' },
 ];
 
 const durationOptions = [
+  { value: 0, label: 'Undefined' },
   { value: 5, label: '5 min' },
   { value: 10, label: '10 min' },
   { value: 15, label: '15 min' },
@@ -47,13 +48,13 @@ const durationOptions = [
 ];
 
 /* --------------------------------------------
-  Composant principal : MeditationTimer
+  Main component: MeditationTimer
 -------------------------------------------- */
 
 export default function MeditationTimer() {
 
   /* -------------------------
-    États de l'application
+    Application states
   -------------------------- */
 
   const [selectedSound, setSelectedSound] = useState('silence');
@@ -69,6 +70,7 @@ export default function MeditationTimer() {
   const [gongInterval, setGongInterval] = useState(0);
   const [gongMoments, setGongMoments] = useState({ start: false, end: false });
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [timeElapsed, setTimeElapsed] = useState(0);
   const [nextGongIn, setNextGongIn] = useState(0);
   const [customSounds, setCustomSounds] = useState<SoundOption[]>([]);
   const [preparationTime, setPreparationTime] = useState(0);
@@ -85,10 +87,10 @@ export default function MeditationTimer() {
   const previewAmbientTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /* -------------------------
-    Sélections actuelles
+    Current selections
   -------------------------- */
 
-  // Charger les sons personnalisés au démarrage
+  // Load custom sounds on startup
   useEffect(() => {
     const loadCustomSounds = async () => {
       try {
@@ -101,17 +103,17 @@ export default function MeditationTimer() {
           const savedSounds = JSON.parse(result.data);
           setCustomSounds(savedSounds);
         } else {
-          setCustomSounds([]); // Aucun son sauvegardé
+          setCustomSounds([]); // No saved sounds
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des sons personnalisés :', error);
-        setCustomSounds([]); // Aucun son sauvegardé
+        console.error('Error loading custom sounds:', error);
+        setCustomSounds([]); // No saved sounds
       }
     };
     loadCustomSounds();
   }, []);
 
-  // Charger la préférence du mode sombre au démarrage
+  // Load dark mode preference on startup
   useEffect(() => {
     const loadDarkMode = async () => {
       try {
@@ -125,13 +127,13 @@ export default function MeditationTimer() {
           setIsDarkMode(isDark);
         }
       } catch (error) {
-        console.log('Pas de préférence de mode sombre sauvegardée');
+        console.log('No dark mode preference saved');
       }
     };
     loadDarkMode();
   }, []);
 
-  // Sauvegarder la préférence du mode sombre
+  // Save dark mode preference
   useEffect(() => {
     const saveDarkMode = async () => {
       try {
@@ -141,13 +143,13 @@ export default function MeditationTimer() {
           directory: Directory.Data,
         });
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde du mode sombre:', error);
+        console.error('Error saving dark mode:', error);
       }
     };
     saveDarkMode();
   }, [isDarkMode]);
 
-  // Appliquer la classe dark-mode au body
+  // Apply dark-mode class to body
   useEffect(() => {
     if (isDarkMode) {
       document.body.classList.add('dark-mode');
@@ -156,7 +158,7 @@ export default function MeditationTimer() {
     }
   }, [isDarkMode]);
 
-  // Sauvegarder les sons personnalisés
+  // Save custom sounds
   const saveCustomSounds = async (sounds: SoundOption[]) => {
     await Filesystem.writeFile({
       path: 'custom-sounds.json',
@@ -165,7 +167,7 @@ export default function MeditationTimer() {
     });
   };
 
-  // Ajouter un son personnalisé
+  // Add a custom sound
   const addCustomSound = async () => {
     try {
       const result = await FilePicker.pickFiles({
@@ -174,23 +176,23 @@ export default function MeditationTimer() {
       });
 
       if (!result.files[0]) {
-        console.log('Aucun fichier sélectionné');
+        console.log('No file selected');
         return;
       }
 
       const file = result.files[0];
       const soundId = `custom_${Date.now()}`;
       const fileName = `${soundId}.${file.name.split('.').pop()}`;
-      const soundName = file.name.replace(/\.[^/.]+$/, ""); // Nom sans extension
+      const soundName = file.name.replace(/\.[^/.]+$/, ""); // Name without extension
 
-      // Sauvegarder le fichier dans le système de fichiers
+      // Save the file to the filesystem
       await Filesystem.writeFile({
         path: `audio/${fileName}`,
         data: file.data ?? '',
         directory: Directory.Data,
       });
 
-      // Créer l'objet son personnalisé
+      // Create the custom sound object
       const newCustomSound: SoundOption = {
         value: soundId,
         label: `🎵 ${soundName}`,
@@ -198,39 +200,39 @@ export default function MeditationTimer() {
         isCustom: true
       };
 
-      // Mettre à jour la liste des sons personnalisés
+      // Update the custom sounds list
       const updatedCustomSounds = [...customSounds, newCustomSound];
       setCustomSounds(updatedCustomSounds);
       
-      // Sauvegarder dans le stockage persistant
+      // Save to persistent storage
       await saveCustomSounds(updatedCustomSounds);
 
-      // Sélectionner automatiquement le nouveau son
+      // Automatically select the new sound
       setSelectedSound(soundId);
 
-      console.log(`Son ajouté et sélectionné : ${soundName}`);
+      console.log(`Sound added and selected: ${soundName}`);
     } catch (error) {
-      console.error('Erreur lors de la sélection ou de la sauvegarde du fichier :', error);
+      console.error('Error selecting or saving file:', error);
     }
   };
 
-  // Supprimer un son personnalisé
+  // Remove a custom sound
   const removeCustomSound = async (soundId: string) => {
     try {
-      // Trouver le son à supprimer
+      // Find the sound to remove
       const soundToRemove = customSounds.find(sound => sound.value === soundId);
       if (!soundToRemove) return;
 
-      // Demander confirmation avant suppression
+      // Ask for confirmation before deletion
       const confirmDelete = window.confirm(
-        `Êtes-vous sûr de vouloir supprimer le son "${soundToRemove.label.replace('🎵 ', '')}" ?\n\nCette action est irréversible.`
+        `Are you sure you want to delete the sound "${soundToRemove.label.replace('🎵 ', '')}"?\n\nThis action is irreversible.`
       );
       
       if (!confirmDelete) {
         return; 
       }
 
-      // Supprimer le fichier audio du système de fichiers
+      // Delete the audio file from the filesystem
       if (soundToRemove.file) {
         try {
           await Filesystem.deleteFile({
@@ -238,25 +240,25 @@ export default function MeditationTimer() {
             directory: Directory.Data,
           });
         } catch (error) {
-          console.warn('Impossible de supprimer le fichier audio:', error);
+          console.warn('Unable to delete audio file:', error);
         }
       }
 
-      // Mettre à jour la liste des sons personnalisés
+      // Update the custom sounds list
       const updatedCustomSounds = customSounds.filter(sound => sound.value !== soundId);
       setCustomSounds(updatedCustomSounds);
       
-      // Sauvegarder dans le stockage persistant
+      // Save to persistent storage
       await saveCustomSounds(updatedCustomSounds);
 
-      // Si le son supprimé était sélectionné, revenir au silence
+      // If the deleted sound was selected, return to silence
       if (selectedSound === soundId) {
         setSelectedSound('silence');
       }
 
-      console.log(`Son supprimé : ${soundToRemove.label}`);
+      console.log(`Sound removed: ${soundToRemove.label}`);
     } catch (error) {
-      console.error('Erreur lors de la suppression du son personnalisé :', error);
+      console.error('Error removing custom sound:', error);
     }
   };
 
@@ -265,13 +267,13 @@ export default function MeditationTimer() {
   const selectedGongOption = gongOptions.find((g) => g.id === selectedGong);
 
   /* -------------------------
-    Prévisualisation des sons avec lecture automatique
+    Sound preview with automatic playback
   -------------------------- */
 
-// Fonction utilitaire pour appliquer un fondu de sortie
+// Utility function to apply fade out
 const fadeOut = (audio: HTMLAudioElement, duration: number = 1000) => {
   const startVolume = audio.volume;
-  const fadeInterval = 50; // Mise à jour toutes les 50ms
+  const fadeInterval = 50; // Update every 50ms
   const steps = duration / fadeInterval;
   const volumeStep = startVolume / steps;
   
@@ -288,47 +290,47 @@ const fadeOut = (audio: HTMLAudioElement, duration: number = 1000) => {
   return fade;
 };
 
-// Fonction pour prévisualiser un son ambiant
+// Function to preview an ambient sound
 const previewAmbientSound = (soundValue: string) => {
-  // Arrêter toute prévisualisation en cours avec fondu
+  // Stop any current preview with fade
   if (previewAmbientRef.current) {
     fadeOut(previewAmbientRef.current, 500);
     previewAmbientRef.current = null;
   }
   
-  // Nettoyer l'ancien timeout
+  // Clear old timeout
   if (previewAmbientTimeoutRef.current) {
     clearTimeout(previewAmbientTimeoutRef.current);
     previewAmbientTimeoutRef.current = null;
   }
   
-  // Trouver le fichier du son sélectionné
+  // Find the selected sound file
   const soundOption = allSounds.find(s => s.value === soundValue);
   
-  // Ne pas prévisualiser le silence
+  // Don't preview silence
   if (soundValue === 'silence' || !soundOption?.file) return;
   
-  // Créer et jouer le nouveau son en prévisualisation
+  // Create and play the new preview sound
   const audio = new Audio(soundOption.file);
   audio.volume = volume;
   audio.loop = false;
   previewAmbientRef.current = audio;
   audio.play().catch(err => {
-    console.error('Erreur lors de la lecture de la prévisualisation:', err);
+    console.error('Error playing preview:', err);
   });
   
-  // Arrêter la prévisualisation après 8 secondes avec fondu de 2 seconde
+  // Stop preview after 8 seconds with 2 second fade
   previewAmbientTimeoutRef.current = setTimeout(() => {
     if (previewAmbientRef.current) {
       fadeOut(previewAmbientRef.current, 2000);
       previewAmbientRef.current = null;
     }
-  }, 6000); // 6 secondes avant le fondu (6s + 2s de fondu = 8s total)
+  }, 6000); // 6 seconds before fade (6s + 2s fade = 8s total)
 };
 
-// Fonction pour prévisualiser un gong
+// Function to preview a gong
 const previewGong = (gongId: string) => {
-  // Arrêter toute prévisualisation en cours avec fondu
+  // Stop any current preview with fade
   if (previewGongRef.current) {
     fadeOut(previewGongRef.current, 300);
     previewGongRef.current = null;
@@ -337,16 +339,16 @@ const previewGong = (gongId: string) => {
   const gongOption = gongOptions.find((g) => g.id === gongId);
   if (!gongOption?.file) return;
   
-  // Créer et jouer le nouveau gong en prévisualisation
+  // Create and play the new gong preview
   const audio = new Audio(gongOption.file);
   audio.volume = gongVolume;
   previewGongRef.current = audio;
   audio.play().catch(err => {
-    console.error('Erreur lors de la lecture de la prévisualisation du gong:', err);
+    console.error('Error playing gong preview:', err);
   });
 };
 
-// Cleanup des prévisualisations au démontage du composant
+// Cleanup previews on component unmount
 useEffect(() => {
   return () => {
     if (previewAmbientTimeoutRef.current) {
@@ -361,14 +363,14 @@ useEffect(() => {
   };
 }, []);
 
-// Ajustement du volume en temps réel pour la prévisualisation du son ambiant
+// Real-time volume adjustment for ambient sound preview
 useEffect(() => {
   if (previewAmbientRef.current) {
     previewAmbientRef.current.volume = volume;
   }
 }, [volume]);
 
-// Ajustement du volume en temps réel pour la prévisualisation du gong
+// Real-time volume adjustment for gong preview
 useEffect(() => {
   if (previewGongRef.current) {
     previewGongRef.current.volume = gongVolume;
@@ -376,7 +378,7 @@ useEffect(() => {
 }, [gongVolume]);
 
   /* -------------------------
-    Logique du timer
+    Timer logic
   -------------------------- */
 
   const formatTime = (seconds: number) => {
@@ -394,7 +396,7 @@ useEffect(() => {
   };
 
   const handlePlay = () => {
-    // Arrêter toutes les prévisualisations
+    // Stop all previews
     if (previewAmbientRef.current) {
       previewAmbientRef.current.pause();
       previewAmbientRef.current = null;
@@ -423,6 +425,7 @@ useEffect(() => {
   const startMeditation = () => {
     setIsPlaying(true);
     setTimeRemaining(duration * 60);
+    setTimeElapsed(0);
     setNextGongIn(gongInterval > 0 ? gongInterval * 60 : 0);
 
     if (gongMoments.start) {
@@ -434,15 +437,22 @@ useEffect(() => {
       ambientAudioRef.current.play();
     }
 
-    timerRef.current = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          handleEnd();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // For undefined duration (duration === 0), count up instead of down
+    if (duration === 0) {
+      timerRef.current = setInterval(() => {
+        setTimeElapsed((prev) => prev + 1);
+      }, 1000);
+    } else {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            handleEnd();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
 
     if (gongInterval > 0) {
       gongTimerRef.current = setInterval(() => {
@@ -473,15 +483,22 @@ useEffect(() => {
       ambientAudioRef.current.play();
     }
 
-    timerRef.current = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          handleEnd();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // For undefined duration, continue counting up
+    if (duration === 0) {
+      timerRef.current = setInterval(() => {
+        setTimeElapsed((prev) => prev + 1);
+      }, 1000);
+    } else {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            handleEnd();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
 
     if (gongInterval > 0) {
       gongTimerRef.current = setInterval(() => {
@@ -527,7 +544,7 @@ useEffect(() => {
   };
 
   /* --------------------------
-    Gestion de la durée personnalisée
+    Custom duration management
   -------------------------- */
 
   const handleAddCustomDuration = () => {
@@ -540,30 +557,30 @@ useEffect(() => {
   };
 
   /* -------------------------
-    Interface utilisateur (UI)
+    User Interface (UI)
   -------------------------- */
 
   return (
     <div className="app">
       <div className="container">
 
-        {/* Bouton Dark Mode */}
+        {/* Dark Mode Button */}
         <button 
           onClick={() => setIsDarkMode(!isDarkMode)}
           className="btn-dark-mode"
-          title={isDarkMode ? "Mode clair" : "Mode sombre"}
-          aria-label={isDarkMode ? "Activer le mode clair" : "Activer le mode sombre"}
+          title={isDarkMode ? "Light mode" : "Dark mode"}
+          aria-label={isDarkMode ? "Activate light mode" : "Activate dark mode"}
         >
           {isDarkMode ? '☀️' : '🌙'}
         </button>
 
-        {/* Logo uniquement */}
+        {/* Logo only */}
         <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-          <img src="/mediteasy.svg" alt="logo Mediteasy" style={{ height: '190px', width: 'auto' }} /> 
+          <img src="/mediteasy.svg" alt="Mediteasy logo" style={{ height: '190px', width: 'auto' }} /> 
         </div>
 
 
-        {/* Fichiers audio cachés */}
+        {/* Hidden audio files */}
         {selectedSound !== 'silence' && selectedSoundOption?.file && (
           <audio
             ref={ambientAudioRef}
@@ -581,33 +598,75 @@ useEffect(() => {
           />
         )}
 
-        {/* Phase de préparation */}
+        {/* Preparation phase */}
         {isPreparing && (
           <div className="section">
-            <div className="time-display">{preparationTime}</div>
-            <div className="text-muted">🧘 Préparez-vous...</div>
+            <div className="preparation-container">
+              <div className="preparation-circle">
+                <svg className="preparation-svg" viewBox="0 0 200 200">
+                  <defs>
+                    <linearGradient id="preparationGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#3dcac3" />
+                      <stop offset="100%" stopColor="#428b6a" />
+                    </linearGradient>
+                  </defs>
+                  <circle
+                    className="preparation-ring-bg"
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    opacity="0.2"
+                  />
+                  <circle
+                    className="preparation-ring"
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    fill="none"
+                    stroke="url(#preparationGradient)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray="565.48"
+                    style={{
+                      strokeDashoffset: `${565.48 * (preparationTime / 10)}`,
+                      transition: 'stroke-dashoffset 1s linear'
+                    }}
+                  />
+                </svg>
+                <div className="preparation-content">
+                  <div className="preparation-number">{preparationTime}</div>
+                  <div className="preparation-emoji">🧘</div>
+                </div>
+              </div>
+              <div className="text-muted preparation-text">Get ready...</div>
+            </div>
           </div>
         )}
 
-        {/* Affichage pendant la méditation ou en pause */}
+        {/* Display during meditation or paused */}
         {(isPlaying || isPaused) && (
           <div className="section">
-            <div className="time-display">{formatTime(timeRemaining)}</div>
+            <div className="time-display">
+              {duration === 0 ? formatTime(timeElapsed) : formatTime(timeRemaining)}
+            </div>
             <div className="text-muted">
-              {isPaused ? '⏸️ En pause' : 'Temps restant'}
+              {isPaused ? '⏸️ Paused' : (duration === 0 ? 'Time elapsed' : 'Time remaining')}
             </div>
             {gongInterval > 0 && nextGongIn > 0 && !isPaused && (
               <div className="text-muted">
-                🔔 Prochain gong dans {formatTime(nextGongIn)}
+                🔔 Next gong in {formatTime(nextGongIn)}
               </div>
             )}
           </div>
         )}
 
-        {/* Configuration avant démarrage */}
+        {/* Configuration before start */}
         {!isPlaying && !isPaused && !isFinished && !isPreparing && (
           <>
-            {/* Son ambiant */}
+            {/* Ambient sound */}
             <div className="section compact">
               <div className="control-row">
                 <span className="control-icon">🎵</span>
@@ -620,7 +679,7 @@ useEffect(() => {
                       addCustomSound();
                     } else {
                       setSelectedSound(value);
-                      // Prévisualiser le son seulement si on n'est pas en train de méditer
+                      // Preview sound only if not meditating
                       if (!isPlaying && !isPaused && !isPreparing) {
                         previewAmbientSound(value);
                       }
@@ -638,15 +697,15 @@ useEffect(() => {
                       {s.label}
                     </option>
                   ))}
-                  <option value="custom">⬇️ Ajouter un son personnalisé</option>
+                  <option value="custom">⬇️ Add custom sound</option>
                 </select>
                 {selectedSoundOption?.isCustom && (
                   <button 
                     onClick={() => removeCustomSound(selectedSound)} 
                     className="btn-delete"
-                    title="Supprimer ce son"
+                    title="Delete this sound"
                   >
-                    <img src="/assets/images/trash.svg" alt="Supprimer" />
+                    <img src="/assets/images/trash.svg" alt="Delete" />
                   </button>
                 )}
               </div>
@@ -667,7 +726,7 @@ useEffect(() => {
               )}
             </div>
 
-            {/* Gong de méditation */}
+            {/* Meditation gong */}
             <div className="section compact">
               <div className="control-row">
                 <span className="control-icon">🔔</span>
@@ -676,7 +735,7 @@ useEffect(() => {
                   onChange={(e) => {
                     const value = e.target.value;
                     setSelectedGong(value);
-                    // Prévisualiser le gong seulement si on n'est pas en train de méditer
+                    // Preview gong only if not meditating
                     if (!isPlaying && !isPaused && !isPreparing) {
                       previewGong(value);
                     }
@@ -728,7 +787,7 @@ useEffect(() => {
                       setGongMoments({ ...gongMoments, start: e.target.checked })
                     }
                   />
-                  🔔 Début
+                  🔔 Start
                 </label>
                 <label className="checkbox compact">
                   <input
@@ -738,12 +797,12 @@ useEffect(() => {
                       setGongMoments({ ...gongMoments, end: e.target.checked })
                     }
                   />
-                  🔔 Fin
+                  🔔 End
                 </label>
               </div>
             </div>
 
-            {/* Durée de méditation */}
+            {/* Meditation duration */}
             <div className="section compact">
               <div className="control-row">
                 <span className="control-icon">⏳</span>
@@ -764,7 +823,7 @@ useEffect(() => {
                       onClick={() => setShowCustomInput(true)}
                       className="btn btn-secondary compact"
                     >
-                      ➕ Personnaliser
+                      ➕ Customize
                     </button>
                   </>
                 ) : (
@@ -800,16 +859,16 @@ useEffect(() => {
           </>
         )}
 
-        {/* Boutons Démarrer / Pause / Reprendre / Stop */}
+        {/* Start / Pause / Resume / Stop buttons */}
         <div className="section">
           {!isPlaying && !isPaused && !isPreparing && (
             <button onClick={handlePlay} className="btn btn-primary">
-              {isFinished ? '🔄 Recommencer' : '▶️ Démarrer'}
+              {isFinished ? '🔄 Restart' : '▶️ Start'}
             </button>
           )}
           {isPaused && (
             <button onClick={handleResume} className="btn btn-primary">
-              ▶️ Reprendre
+              ▶️ Resume
             </button>
           )}
           {isPlaying && (
@@ -818,22 +877,22 @@ useEffect(() => {
                 ⏸️ Pause
               </button>
               <button onClick={handleStop} className="btn btn-secondary">
-                ⏹️ Arrêter
+                ⏹️ Stop
               </button>
             </>
           )}
           {isPaused && (
             <button onClick={handleStop} className="btn btn-secondary">
-              ⏹️ Arrêter
+              ⏹️ Stop
             </button>
           )}
         </div>
 
-        {/* Fin de session */}
+        {/* Session end */}
         {isFinished && (
           <div className="section">
             <div className="emoji">✨</div>
-            <div className="title-section">Méditation terminée !</div>
+            <div className="title-section">Meditation completed!</div>
           </div>
         )}
       </div>

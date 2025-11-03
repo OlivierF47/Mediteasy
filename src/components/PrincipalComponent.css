@@ -864,6 +864,259 @@ body::before {
   filter: grayscale(0%);
 }
 
+/* ========================================
+   PREPARATION ANIMATION
+   ======================================== */
+
+.preparation-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) 0;
+}
+
+.preparation-circle {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preparation-svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 4px 16px rgba(93, 229, 223, 0.3));
+}
+
+.preparation-ring-bg {
+  fill: none;
+  stroke: var(--color-bg-input);
+  stroke-width: 8;
+  opacity: 0.3;
+}
+
+.preparation-ring {
+  fill: none;
+  stroke: url(#preparationGradient);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 565.48; /* 2 * PI * 90 */
+  stroke-dashoffset: 565.48;
+  transition: stroke-dashoffset 1s linear;
+  filter: drop-shadow(0 0 8px rgba(93, 229, 223, 0.6));
+}
+
+/* Add gradient definition - you'll need to add this SVG defs in the component */
+.preparation-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1);
+  z-index: 2;
+}
+
+.preparation-number {
+  font-size: 4rem;
+  font-weight: var(--font-light);
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  animation: preparationPulse 1s ease-in-out infinite;
+  letter-spacing: -0.02em;
+}
+
+.preparation-emoji {
+  font-size: 2.5rem;
+  animation: preparationFloat 2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 8px rgba(93, 229, 223, 0.4));
+}
+
+.preparation-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 0;
+  animation: preparationFade 2s ease-in-out infinite;
+}
+
+@keyframes preparationPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes preparationFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-4px) rotate(-3deg);
+  }
+  66% {
+    transform: translateY(4px) rotate(3deg);
+  }
+}
+
+@keyframes preparationFade {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   PREPARATION ANIMATION
+   ======================================== */
+
+.preparation-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) 0;
+}
+
+.preparation-circle {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preparation-svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 4px 16px rgba(93, 229, 223, 0.3));
+}
+
+.preparation-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1);
+  z-index: 2;
+}
+
+.preparation-number {
+  font-size: 4rem;
+  font-weight: var(--font-light);
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  animation: preparationPulse 1s ease-in-out infinite;
+  letter-spacing: -0.02em;
+}
+
+.preparation-emoji {
+  font-size: 2.5rem;
+  animation: preparationFloat 2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 8px rgba(93, 229, 223, 0.4));
+}
+
+.preparation-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 0;
+  animation: preparationFade 2s ease-in-out infinite;
+}
+
+@keyframes preparationPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes preparationFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-4px) rotate(-3deg);
+  }
+  66% {
+    transform: translateY(4px) rotate(3deg);
+  }
+}
+
+@keyframes preparationFade {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .preparation-circle {
+    width: 180px;
+    height: 180px;
+  }
+
+  .preparation-number {
+    font-size: 3.5rem;
+  }
+
+  .preparation-emoji {
+    font-size: 2rem;
+  }
+
+  .preparation-text {
+    font-size: 1rem;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .preparation-circle {
+    width: 180px;
+    height: 180px;
+  }
+
+  .preparation-number {
+    font-size: 3.5rem;
+  }
+
+  .preparation-emoji {
+    font-size: 2rem;
+  }
+
+  .preparation-text {
+    font-size: 1rem;
+  }
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .app {
