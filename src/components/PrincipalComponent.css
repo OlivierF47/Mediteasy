@@ -1,7 +1,7 @@
 :root{
   /* Couleurs principales - palette zen & apaisante */
-  --color-primary-1: #5DE5DF; /* cyan légèrement plus clair pour le titre */
-  --color-primary-2: #6DD4A6; /* vert douceur légèrement plus clair */
+  --color-primary-1: #3dcac3; /* cyan légèrement plus clair pour le titre */
+  --color-primary-2: #428b6a; /* vert douceur légèrement plus clair */
   --color-accent:     #0D4A62; /* bleu foncé principal - meilleur contraste */
   --color-accent-2:   #0B5873; /* bleu accent (hover/bordures) */
   --color-mindful:    #A8DFD8; /* teinte méditative douce */
@@ -56,6 +56,175 @@
   --breath-duration: 4s;
 }
 
+/* ========================================
+   DARK MODE
+   ======================================== */
+
+body.dark-mode {
+  /* Couleurs principales - palette sombre apaisante */
+  --color-primary-1: #4DD4CD; /* cyan lumineux pour le titre */
+  --color-primary-2: #5DB89A; /* vert apaisant lumineux */
+  --color-accent: #E8F4F8; /* texte clair principal */
+  --color-accent-2: #6DD4E5; /* accent cyan pour hover */
+  --color-mindful: #2C5F6F; /* teinte méditative sombre */
+  
+  /* Neutres sombres */
+  --color-bg: #0F1419; /* fond général très sombre */
+  --color-surface: #1A2128; /* carte principale */
+  --color-bg-input: #242D36; /* fond des éléments interactifs */
+  --color-muted: #8BA5B3; /* textes secondaires */
+  --color-outline: rgba(107,178,193,0.15); /* bordures subtiles */
+  
+  /* Texte */
+  --text-default: #E8F4F8; /* texte principal clair */
+  --text-secondary: #B8D4DF; /* texte secondaire */
+  --text-on-primary: #0A1419; /* texte sur boutons colorés */
+  
+  /* Dégradés adaptés au dark mode */
+  --grad-primary: linear-gradient(135deg, #4DD4CD, #5DB89A);
+  --grad-ambient: linear-gradient(180deg, rgba(77,212,205,0.04) 0%, rgba(93,184,154,0.02) 100%);
+  --grad-radial: radial-gradient(circle at 50% 0%, rgba(77,212,205,0.08) 0%, transparent 70%);
+  
+  /* Ombres adaptées */
+  --shadow-soft: 0 2px 16px rgba(0,0,0,0.4);
+  --shadow-hover: 0 4px 24px rgba(0,0,0,0.5);
+  --shadow-float: 0 8px 40px rgba(0,0,0,0.6);
+  --shadow-inner: inset 0 1px 3px rgba(0,0,0,0.3);
+  --glow-soft: 0 0 24px rgba(77,212,205,0.3);
+  
+  /* Focus ring adapté */
+  --focus-ring: 3px solid rgba(77,212,205,0.5);
+}
+
+/* Ajustements spécifiques pour les inputs en dark mode */
+body.dark-mode .input,
+body.dark-mode .select {
+  background: var(--color-bg-input);
+  border-color: var(--color-outline);
+  color: var(--text-default);
+}
+
+body.dark-mode .input::placeholder {
+  color: var(--color-muted);
+}
+
+/* Bouton secondaire en dark mode */
+body.dark-mode .btn-secondary {
+  background: var(--color-bg-input);
+  color: var(--text-secondary);
+  border-color: var(--color-outline);
+}
+
+body.dark-mode .btn-secondary:hover {
+  background: var(--color-surface);
+  border-color: var(--color-accent-2);
+}
+
+/* Checkbox en dark mode */
+body.dark-mode .checkbox {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .checkbox.compact {
+  background: var(--color-bg-input);
+  border-color: var(--color-outline);
+}
+
+body.dark-mode .checkbox.compact:hover {
+  border-color: var(--color-accent-2);
+}
+
+body.dark-mode .checkbox input[type="checkbox"] {
+  border-color: var(--color-outline);
+  background: var(--color-bg-input);
+}
+
+/* Range slider en dark mode */
+body.dark-mode .range {
+  background: var(--color-bg-input);
+  border-color: var(--color-outline);
+}
+
+body.dark-mode .range::-webkit-slider-track {
+  background: var(--color-bg-input);
+}
+
+body.dark-mode .range::-webkit-slider-thumb {
+  border-color: var(--color-surface);
+}
+
+body.dark-mode .range::-moz-range-thumb {
+  border-color: var(--color-surface);
+}
+
+/* Bouton de suppression en dark mode */
+body.dark-mode .btn-delete {
+  background: var(--color-bg-input);
+  border-color: var(--color-outline);
+}
+
+body.dark-mode .btn-delete:hover {
+  background: var(--color-surface);
+  border-color: var(--color-accent-2);
+}
+
+body.dark-mode .btn-delete img {
+  filter: invert(1) grayscale(20%) brightness(1.2);
+}
+
+body.dark-mode .btn-delete:hover img {
+  filter: invert(1) grayscale(0%) brightness(1.3);
+}
+
+/* Liste en dark mode */
+body.dark-mode .list-item {
+  background: var(--color-bg-input);
+  border-color: var(--color-outline);
+  color: var(--text-secondary);
+}
+
+body.dark-mode .list-item:hover {
+  border-color: var(--color-accent-2);
+}
+
+/* ========================================
+   BOUTON DARK MODE
+   ======================================== */
+
+.btn-dark-mode {
+  position: absolute;
+  top: var(--spacing-3);
+  right: var(--spacing-3);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--color-outline);
+  background: var(--color-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-soft);
+  z-index: 10;
+}
+
+.btn-dark-mode:hover {
+  transform: rotate(20deg) scale(1.1);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--color-accent-2);
+}
+
+.btn-dark-mode:active {
+  transform: rotate(20deg) scale(1.05);
+}
+
+.btn-dark-mode:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
 /* Reset & Base */
 * {
   margin: 0;
@@ -73,6 +242,7 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   position: relative;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Effet de respiration ambiant en arrière-plan - plus subtil */
@@ -770,6 +940,7 @@ body::before {
     transition-duration: 0.01ms !important;
   }
 }
+
 /* Select de durée plus court pour laisser place au bouton Personnaliser */
 .duration-select {
   flex: 0 1 auto;

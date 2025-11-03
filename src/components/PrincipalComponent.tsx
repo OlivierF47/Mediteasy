@@ -73,6 +73,7 @@ export default function MeditationTimer() {
   const [customSounds, setCustomSounds] = useState<SoundOption[]>([]);
   const [preparationTime, setPreparationTime] = useState(0);
   const [isPreparing, setIsPreparing] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
   const gongAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -109,6 +110,51 @@ export default function MeditationTimer() {
     };
     loadCustomSounds();
   }, []);
+
+  // Charger la préférence du mode sombre au démarrage
+  useEffect(() => {
+    const loadDarkMode = async () => {
+      try {
+        const result = await Filesystem.readFile({
+          path: 'dark-mode.json',
+          directory: Directory.Data,
+        });
+
+        if (result && typeof result.data === 'string') {
+          const { isDark } = JSON.parse(result.data);
+          setIsDarkMode(isDark);
+        }
+      } catch (error) {
+        console.log('Pas de préférence de mode sombre sauvegardée');
+      }
+    };
+    loadDarkMode();
+  }, []);
+
+  // Sauvegarder la préférence du mode sombre
+  useEffect(() => {
+    const saveDarkMode = async () => {
+      try {
+        await Filesystem.writeFile({
+          path: 'dark-mode.json',
+          data: JSON.stringify({ isDark: isDarkMode }),
+          directory: Directory.Data,
+        });
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde du mode sombre:', error);
+      }
+    };
+    saveDarkMode();
+  }, [isDarkMode]);
+
+  // Appliquer la classe dark-mode au body
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [isDarkMode]);
 
   // Sauvegarder les sons personnalisés
   const saveCustomSounds = async (sounds: SoundOption[]) => {
@@ -222,94 +268,112 @@ export default function MeditationTimer() {
     Prévisualisation des sons avec lecture automatique
   -------------------------- */
 
-  // Fonction pour prévisualiser un son ambiant
-  const previewAmbientSound = (soundValue: string) => {
-    // Arrêter toute prévisualisation en cours
+// Fonction utilitaire pour appliquer un fondu de sortie
+const fadeOut = (audio: HTMLAudioElement, duration: number = 1000) => {
+  const startVolume = audio.volume;
+  const fadeInterval = 50; // Mise à jour toutes les 50ms
+  const steps = duration / fadeInterval;
+  const volumeStep = startVolume / steps;
+  
+  const fade = setInterval(() => {
+    if (audio.volume > volumeStep) {
+      audio.volume = Math.max(0, audio.volume - volumeStep);
+    } else {
+      audio.volume = 0;
+      audio.pause();
+      clearInterval(fade);
+    }
+  }, fadeInterval);
+  
+  return fade;
+};
+
+// Fonction pour prévisualiser un son ambiant
+const previewAmbientSound = (soundValue: string) => {
+  // Arrêter toute prévisualisation en cours avec fondu
+  if (previewAmbientRef.current) {
+    fadeOut(previewAmbientRef.current, 500);
+    previewAmbientRef.current = null;
+  }
+  
+  // Nettoyer l'ancien timeout
+  if (previewAmbientTimeoutRef.current) {
+    clearTimeout(previewAmbientTimeoutRef.current);
+    previewAmbientTimeoutRef.current = null;
+  }
+  
+  // Trouver le fichier du son sélectionné
+  const soundOption = allSounds.find(s => s.value === soundValue);
+  
+  // Ne pas prévisualiser le silence
+  if (soundValue === 'silence' || !soundOption?.file) return;
+  
+  // Créer et jouer le nouveau son en prévisualisation
+  const audio = new Audio(soundOption.file);
+  audio.volume = volume;
+  audio.loop = false;
+  previewAmbientRef.current = audio;
+  audio.play().catch(err => {
+    console.error('Erreur lors de la lecture de la prévisualisation:', err);
+  });
+  
+  // Arrêter la prévisualisation après 8 secondes avec fondu de 2 seconde
+  previewAmbientTimeoutRef.current = setTimeout(() => {
     if (previewAmbientRef.current) {
-      previewAmbientRef.current.pause();
+      fadeOut(previewAmbientRef.current, 2000);
       previewAmbientRef.current = null;
     }
+  }, 6000); // 6 secondes avant le fondu (6s + 2s de fondu = 8s total)
+};
 
-    // Nettoyer l'ancien timeout
+// Fonction pour prévisualiser un gong
+const previewGong = (gongId: string) => {
+  // Arrêter toute prévisualisation en cours avec fondu
+  if (previewGongRef.current) {
+    fadeOut(previewGongRef.current, 300);
+    previewGongRef.current = null;
+  }
+  
+  const gongOption = gongOptions.find((g) => g.id === gongId);
+  if (!gongOption?.file) return;
+  
+  // Créer et jouer le nouveau gong en prévisualisation
+  const audio = new Audio(gongOption.file);
+  audio.volume = gongVolume;
+  previewGongRef.current = audio;
+  audio.play().catch(err => {
+    console.error('Erreur lors de la lecture de la prévisualisation du gong:', err);
+  });
+};
+
+// Cleanup des prévisualisations au démontage du composant
+useEffect(() => {
+  return () => {
     if (previewAmbientTimeoutRef.current) {
       clearTimeout(previewAmbientTimeoutRef.current);
-      previewAmbientTimeoutRef.current = null;
     }
-
-    // Trouver le fichier du son sélectionné
-    const soundOption = allSounds.find(s => s.value === soundValue);
-    
-    // Ne pas prévisualiser le silence
-    if (soundValue === 'silence' || !soundOption?.file) return;
-
-    // Créer et jouer le nouveau son en prévisualisation
-    const audio = new Audio(soundOption.file);
-    audio.volume = volume;
-    audio.loop = false;
-    previewAmbientRef.current = audio;
-    
-    audio.play().catch(err => {
-      console.error('Erreur lors de la lecture de la prévisualisation:', err);
-    });
-
-    // Arrêter la prévisualisation après 3 secondes
-    previewAmbientTimeoutRef.current = setTimeout(() => {
-      if (previewAmbientRef.current) {
-        previewAmbientRef.current.pause();
-        previewAmbientRef.current = null;
-      }
-    }, 3000);
-  };
-
-  // Fonction pour prévisualiser un gong
-  const previewGong = (gongId: string) => {
-    // Arrêter toute prévisualisation en cours
-    if (previewGongRef.current) {
-      previewGongRef.current.pause();
-      previewGongRef.current = null;
-    }
-
-    const gongOption = gongOptions.find((g) => g.id === gongId);
-    if (!gongOption?.file) return;
-
-    // Créer et jouer le nouveau gong en prévisualisation
-    const audio = new Audio(gongOption.file);
-    audio.volume = gongVolume;
-    previewGongRef.current = audio;
-    
-    audio.play().catch(err => {
-      console.error('Erreur lors de la lecture de la prévisualisation du gong:', err);
-    });
-  };
-
-  // Cleanup des prévisualisations au démontage du composant
-  useEffect(() => {
-    return () => {
-      if (previewAmbientTimeoutRef.current) {
-        clearTimeout(previewAmbientTimeoutRef.current);
-      }
-      if (previewAmbientRef.current) {
-        previewAmbientRef.current.pause();
-      }
-      if (previewGongRef.current) {
-        previewGongRef.current.pause();
-      }
-    };
-  }, []);
-
-  // Ajustement du volume en temps réel pour la prévisualisation du son ambiant
-  useEffect(() => {
     if (previewAmbientRef.current) {
-      previewAmbientRef.current.volume = volume;
+      fadeOut(previewAmbientRef.current, 500);
     }
-  }, [volume]);
-
-  // Ajustement du volume en temps réel pour la prévisualisation du gong
-  useEffect(() => {
     if (previewGongRef.current) {
-      previewGongRef.current.volume = gongVolume;
+      fadeOut(previewGongRef.current, 300);
     }
-  }, [gongVolume]);
+  };
+}, []);
+
+// Ajustement du volume en temps réel pour la prévisualisation du son ambiant
+useEffect(() => {
+  if (previewAmbientRef.current) {
+    previewAmbientRef.current.volume = volume;
+  }
+}, [volume]);
+
+// Ajustement du volume en temps réel pour la prévisualisation du gong
+useEffect(() => {
+  if (previewGongRef.current) {
+    previewGongRef.current.volume = gongVolume;
+  }
+}, [gongVolume]);
 
   /* -------------------------
     Logique du timer
@@ -483,8 +547,18 @@ export default function MeditationTimer() {
     <div className="app">
       <div className="container">
 
+        {/* Bouton Dark Mode */}
+        <button 
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="btn-dark-mode"
+          title={isDarkMode ? "Mode clair" : "Mode sombre"}
+          aria-label={isDarkMode ? "Activer le mode clair" : "Activer le mode sombre"}
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
+
         {/* Logo uniquement */}
-        <div style={{ textAlign: 'center', marginBottom: '17px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '15px' }}>
           <img src="/mediteasy.svg" alt="logo Mediteasy" style={{ height: '190px', width: 'auto' }} /> 
         </div>
 
